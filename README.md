@@ -1,36 +1,42 @@
-# poke-tool
+# pokeChampTool
 
-ポケモンチャンピオンズ（メガシンカ有り、Z技 / ダイマックス / テラスタル無し）向けの **ダメージ計算 / 逆引き / 耐久調整** Web ツール。
+ポケモンチャンピオンズ(メガシンカ有り、Z技 / ダイマックス / テラスタル無し)向けの **ダメージ計算 / 逆引き / 耐久調整** Web ツール。
 
-DB 不要。データはすべて `src/data/*.ts` で管理（ブラウザ単体で完結）。
+DB 不要。データはすべて `src/data/*.ts` で管理(ブラウザ単体で完結)。GitHub Pages で公開。
 
 ## チャンピオンズのステータス仕様
 
-- **個体値**：全ステータス固定 31
-- **努力値廃止**：代わりに **能力ポイント** を採用
+- **個体値**: 全ステータス固定 31
+- **努力値廃止**: 代わりに **能力ポイント** を採用
   - 1 ステータスあたり上限 **32 ポイント**、全ステータス合計上限 **66 ポイント**
   - 1 ポイントにつき実数値が **+1**
-- **レベル**：50 固定
-- **ステータス計算式**：
-  - HP：`floor((種族値×2 + 31 + 能力P×2) × 50/100) + 60`
-  - HP 以外：`floor((floor((種族値×2 + 31 + 能力P×2) × 50/100) + 5) × 性格補正)`
+- **レベル**: 50 固定
+- **ステータス計算式**:
+  - HP: `floor((種族値×2 + 31 + 能力P×2) × 50/100) + 60`
+  - HP 以外: `floor((floor((種族値×2 + 31 + 能力P×2) × 50/100) + 5) × 性格補正)`
 
 ## 機能
 
-- `/calc` ダメージ計算：攻撃側・防御側・技・場の状態を入力 → 与ダメ%・確定数・乱数16段階を即時表示。
-- `/reverse` 逆引き：
-  - **ステータス推定**：画面に表示された「相手の残り体力 ◯%」を入力すると、相手の HP / B (or D) 能力ポイント候補を列挙。
-  - **必要火力**：「確定1発 / 乱数1発N%以上」の達成に必要な攻撃側能力ポイントを算出。
-- `/bulk` 耐久調整：脅威リスト（攻撃側＋技＋達成条件）を登録 → 全部耐えられる H/B/D 配分の上位案を提案（合計 66 以内）。
+- `/calc` ダメージ計算: 攻撃側・防御側・技・場の状態を入力 → 与ダメ%・確定数・乱数16段階を即時表示
+- `/reverse` 逆引き
+  - **ステータス推定**: 画面に表示された「相手の残り体力 ◯%」を入力すると、相手の HP / B (or D) 能力ポイント候補を列挙
+  - **必要火力**: 「確定1発 / 乱数1発N%以上」の達成に必要な攻撃側能力ポイントを算出
+- `/bulk` 耐久調整: 脅威リスト(攻撃側+技+達成条件)を登録 → 全部耐えられる H/B/D 配分の上位案を提案(合計 66 以内)
 
 ## セットアップ
 
 ```bash
-pnpm install
-pnpm dev      # http://localhost:3000
-pnpm test     # vitest（14 ケース）
-pnpm build    # 静的書き出し
+npm install
+npm run dev      # http://localhost:3000
+npm test         # vitest (15 ケース)
+npm run build    # 静的書き出し (out/)
 ```
+
+## デプロイ
+
+`main` ブランチへの push で GitHub Actions が自動ビルド・GitHub Pages へデプロイ(`.github/workflows/nextjs.yml`)。
+
+`next.config.mjs` で `output: "export"` を指定しているため、`next build` で `out/` に静的サイトが生成される。
 
 ## ディレクトリ
 
@@ -38,13 +44,25 @@ pnpm build    # 静的書き出し
 src/
   app/              Next.js App Router ページ
   data/             ポケモン / 技 / アイテム / 性格 / タイプ相性
-  domain/           純粋関数のドメイン層（stats / damage / reverse / bulk-tuning）
+  domain/           純粋関数のドメイン層(stats / damage / reverse / bulk-tuning)
   features/         UI コンポーネント
 tests/              vitest テスト
+.github/workflows/  GitHub Pages デプロイ
 ```
 
-## データ拡張
+## データ
 
-`src/data/pokemon.ts` は代表種 + メガフォーム 22 件、`src/data/moves.ts` は主要技 27 件で初期化。
-全種族・全技を投入したい場合は [`smogon/pokemon-showdown`](https://github.com/smogon/pokemon-showdown) の `data/` から
-スクリプトで抽出して `src/data/*.ts` を置き換える運用を想定（スクリプト同梱なし）。
+- `src/data/pokemon.ts` — ポケモンチャンピオンズ登場ポケモン 234 エントリ(ベース / 公式メガ / 独自メガ / リージョン / 特殊フォーム)。種族値・特性は [smogon/pokemon-showdown](https://github.com/smogon/pokemon-showdown) の `data/` 由来の公式値ベース。独自メガはゲーム内データを直接反映
+- `src/data/moves.ts` — 主要技 27 件
+- `src/data/natures.ts` — 全 25 性格
+- `src/data/items.ts` — 計算に使う持ち物
+- `src/data/type-chart.ts` — タイプ相性表
+
+### 既知の TODO
+
+- `src/data/pokemon.ts` の `weight` は全エントリで暫定 `0`。わざの威力計算で重さ参照が必要になった際に一括更新
+- 独自メガの `megaStone` 名は暫定命名(例: `エンブオーナイト`)。正式名称が判明次第修正
+
+## AI エージェント向けガイド
+
+Claude Code / Codex / Cursor などを使う開発者は [AGENTS.md](AGENTS.md) を参照。
