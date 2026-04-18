@@ -184,15 +184,33 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
                 value={value.aps[k]}
                 onChange={(e) => updateAp(k, Number(e.target.value))}
               />
+              <button
+                type="button"
+                className="input w-7 px-0 text-center"
+                aria-label={`${STAT_LABEL[k]} を 1 減らす`}
+                onClick={() => updateAp(k, value.aps[k] - 1)}
+                disabled={value.aps[k] <= 0}
+              >
+                −
+              </button>
               <input
                 type="number"
                 min={0}
                 max={32}
                 step={1}
-                className="input w-16"
+                className="input w-14"
                 value={value.aps[k]}
                 onChange={(e) => updateAp(k, Number(e.target.value))}
               />
+              <button
+                type="button"
+                className="input w-7 px-0 text-center"
+                aria-label={`${STAT_LABEL[k]} を 1 増やす`}
+                onClick={() => updateAp(k, value.aps[k] + 1)}
+                disabled={value.aps[k] >= 32 || sumStats(value.aps) >= 66}
+              >
+                +
+              </button>
               <span className="w-12 text-right tabular-nums">{stats[k]}</span>
             </div>
           ))}
@@ -205,19 +223,40 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
       <div>
         <div className="label mb-1">ランク補正</div>
         <div className="grid grid-cols-5 gap-1 text-xs">
-          {(["atk", "def", "spa", "spd", "spe"] as const).map((k) => (
-            <label key={k} className="flex items-center gap-1">
-              <span className="text-gray-400 w-3">{STAT_LABEL[k]}</span>
-              <input
-                type="number"
-                min={-6}
-                max={6}
-                className="input"
-                value={value.boosts?.[k] ?? 0}
-                onChange={(e) => updateBoost(k, Number(e.target.value))}
-              />
-            </label>
-          ))}
+          {(["atk", "def", "spa", "spd", "spe"] as const).map((k) => {
+            const current = value.boosts?.[k] ?? 0;
+            return (
+              <div key={k} className="flex items-center gap-1">
+                <span className="text-gray-400 w-3">{STAT_LABEL[k]}</span>
+                <button
+                  type="button"
+                  className="input w-6 px-0 text-center"
+                  aria-label={`${STAT_LABEL[k]} ランクを 1 下げる`}
+                  onClick={() => updateBoost(k, current - 1)}
+                  disabled={current <= -6}
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={-6}
+                  max={6}
+                  className="input w-10 text-center"
+                  value={current}
+                  onChange={(e) => updateBoost(k, Number(e.target.value))}
+                />
+                <button
+                  type="button"
+                  className="input w-6 px-0 text-center"
+                  aria-label={`${STAT_LABEL[k]} ランクを 1 上げる`}
+                  onClick={() => updateBoost(k, current + 1)}
+                  disabled={current >= 6}
+                >
+                  +
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
