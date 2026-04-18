@@ -8,13 +8,16 @@ interface Props {
   label?: string;
 }
 
+// ダメージ計算では補助技 (変化技) を選ぶ余地がないため除外。
+const ATTACK_MOVES = MOVES.filter((m) => m.category !== "変化");
+
 export function MovePicker({ value, onChange, label = "技" }: Props) {
-  const move = MOVES.find((m) => m.id === value);
+  const move = ATTACK_MOVES.find((m) => m.id === value);
   return (
     <div className="panel space-y-2">
       <div className="text-sm text-gray-400">{label}</div>
       <select className="input" value={value} onChange={(e) => onChange(e.target.value)}>
-        {MOVES.map((m) => (
+        {ATTACK_MOVES.map((m) => (
           <option key={m.id} value={m.id}>
             {m.name}
           </option>
