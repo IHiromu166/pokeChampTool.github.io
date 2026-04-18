@@ -7,7 +7,7 @@ import type { PokemonInstance, Stats } from "@/domain/types";
 import { resolveSpecies } from "@/domain/damage";
 import { buildActualStats } from "@/domain/stats";
 import { NATURE_BY_ID } from "@/data/natures";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const STAT_LABEL: Record<keyof Stats, string> = {
   hp: "H",
@@ -35,6 +35,35 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
   }, [value]);
   const baseSpecies = POKEMON_BY_ID[value.speciesId] ?? POKEMON[0];
   const nature = NATURE_BY_ID[value.natureId] ?? NATURE_BY_ID["まじめ"];
+  const selectablePokemon = useMemo(
+    () => POKEMON.filter((p) => !p.id.includes("-mega")),
+    [],
+  );
+  const [nameQuery, setNameQuery] = useState(baseSpecies.name);
+  useEffect(() => {
+    setNameQuery(baseSpecies.name);
+  }, [baseSpecies.name]);
+  const nameMatches = useMemo(() => {
+    const q = nameQuery.trim().toLowerCase();
+    if (!q) return selectablePokemon;
+    return selectablePokemon.filter((p) => p.name.toLowerCase().includes(q));
+  }, [nameQuery, selectablePokemon]);
+  const commitName = (raw: string) => {
+    const q = raw.trim();
+    if (!q) return;
+    const exact = selectablePokemon.find((p) => p.name === q);
+    const hit = exact ?? selectablePokemon.find((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+    if (!hit || hit.id === value.speciesId) {
+      setNameQuery(baseSpecies.name);
+      return;
+    }
+    update({
+      speciesId: hit.id,
+      ability: hit.abilities[0] ?? "",
+      mega: false,
+    });
+    setNameQuery(hit.name);
+  };
   const stats = useMemo(
     () => buildActualStats(species.baseStats, value.aps, nature),
     [species, value, nature],
@@ -69,24 +98,26 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
       <div className="grid grid-cols-2 gap-2">
         <label className="space-y-1">
           <div className="label">ポケモン</div>
-          <select
+          <input
+            type="text"
             className="input"
-            value={value.speciesId}
-            onChange={(e) => {
-              const sp = POKEMON_BY_ID[e.target.value];
-              update({
-                speciesId: e.target.value,
-                ability: sp?.abilities[0] ?? "",
-                mega: false,
-              });
+            list={`pokemon-list-${side}`}
+            value={nameQuery}
+            placeholder="名前で検索"
+            onChange={(e) => setNameQuery(e.target.value)}
+            onBlur={(e) => commitName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commitName((e.target as HTMLInputElement).value);
+              }
             }}
-          >
-            {POKEMON.filter((p) => !p.id.includes("-mega")).map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
+          />
+          <datalist id={`pokemon-list-${side}`}>
+            {nameMatches.map((p) => (
+              <option key={p.id} value={p.name} />
             ))}
-          </select>
+          </datalist>
         </label>
         <label className="space-y-1">
           <div className="label">特性</div>
