@@ -80,7 +80,11 @@ export default function ReversePage() {
         <PokemonForm title="攻撃側" value={attacker} onChange={setAttacker} side="atk" />
         <PokemonForm title="防御側" value={defender} onChange={setDefender} side="def" />
         <div className="space-y-4">
-          <MovePicker value={moveId} onChange={setMoveId} />
+          <MovePicker
+            value={moveId}
+            onChange={setMoveId}
+            attackerSpeciesId={attacker.speciesId}
+          />
           <FieldForm value={field} onChange={setField} />
         </div>
       </div>
