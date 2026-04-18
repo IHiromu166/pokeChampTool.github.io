@@ -36,14 +36,17 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
   const baseSpecies = POKEMON_BY_ID[value.speciesId] ?? POKEMON[0];
   const nature = NATURE_BY_ID[value.natureId] ?? NATURE_BY_ID["まじめ"];
   const stats = useMemo(
-    () =>
-      buildActualStats(species.baseStats, value.ivs, value.evs, value.level, nature),
+    () => buildActualStats(species.baseStats, value.aps, nature),
     [species, value, nature],
   );
 
   const update = (patch: Partial<PokemonInstance>) => onChange({ ...value, ...patch });
-  const updateEv = (key: keyof Stats, ev: number) =>
-    onChange({ ...value, evs: { ...value.evs, [key]: clampEv(ev) } });
+  const updateAp = (key: keyof Stats, raw: number) => {
+    const clamped = clampAp(raw);
+    const otherSum = sumStats(value.aps) - value.aps[key];
+    const ap = Math.min(clamped, Math.max(0, 66 - otherSum));
+    onChange({ ...value, aps: { ...value.aps, [key]: ap } });
+  };
   const updateBoost = (key: Exclude<keyof Stats, "hp">, b: number) =>
     onChange({ ...value, boosts: { ...value.boosts, [key]: clampBoost(b) } });
 
@@ -86,17 +89,6 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
           </select>
         </label>
         <label className="space-y-1">
-          <div className="label">レベル</div>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            className="input"
-            value={value.level}
-            onChange={(e) => update({ level: clamp(Number(e.target.value), 1, 100) })}
-          />
-        </label>
-        <label className="space-y-1">
           <div className="label">特性</div>
           <select
             className="input"
@@ -130,7 +122,7 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
             ))}
           </select>
         </label>
-        <label className="space-y-1 col-span-2">
+        <label className="space-y-1">
           <div className="label">持ち物</div>
           <select
             className="input"
@@ -147,7 +139,7 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
       </div>
 
       <div>
-        <div className="label mb-1">努力値 / 実数値</div>
+        <div className="label mb-1">能力ポイント / 実数値</div>
         <div className="space-y-1">
           {(["hp", "atk", "def", "spa", "spd", "spe"] as const).map((k) => (
             <div key={k} className="flex items-center gap-2 text-sm">
@@ -155,27 +147,27 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
               <input
                 type="range"
                 min={0}
-                max={252}
-                step={4}
+                max={32}
+                step={1}
                 className="flex-1"
-                value={value.evs[k]}
-                onChange={(e) => updateEv(k, Number(e.target.value))}
+                value={value.aps[k]}
+                onChange={(e) => updateAp(k, Number(e.target.value))}
               />
               <input
                 type="number"
                 min={0}
-                max={252}
-                step={4}
+                max={32}
+                step={1}
                 className="input w-16"
-                value={value.evs[k]}
-                onChange={(e) => updateEv(k, Number(e.target.value))}
+                value={value.aps[k]}
+                onChange={(e) => updateAp(k, Number(e.target.value))}
               />
               <span className="w-12 text-right tabular-nums">{stats[k]}</span>
             </div>
           ))}
         </div>
         <div className="text-xs text-gray-500 mt-1">
-          努力値合計: {sum(value.evs)} / 510
+          能力ポイント合計: {sumStats(value.aps)} / 66
         </div>
       </div>
 
@@ -218,9 +210,12 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
   );
 }
 
-function clampEv(n: number): number {
+function clampAp(n: number): number {
   if (Number.isNaN(n)) return 0;
-  return clamp(Math.round(n / 4) * 4, 0, 252);
+  return clamp(Math.round(n), 0, 32);
+}
+function sumStats(s: Stats): number {
+  return s.hp + s.atk + s.def + s.spa + s.spd + s.spe;
 }
 function clampBoost(n: number): number {
   if (Number.isNaN(n)) return 0;
@@ -228,7 +223,4 @@ function clampBoost(n: number): number {
 }
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
-}
-function sum(s: Stats): number {
-  return s.hp + s.atk + s.def + s.spa + s.spd + s.spe;
 }

@@ -4,21 +4,22 @@ import { calcHp, calcStat, natureMultiplier } from "./stats";
 import { resolveSpecies } from "./damage";
 import type { PokemonInstance, Stats } from "./types";
 
-const EV_STEP = 4;
+const AP_STEP = 1;
+const AP_MAX = 32;
 
 export interface ReverseDefenseInput {
   base: DamageInput;
-  /** 防御側の HP が「実数値で」減ったダメージ。% で来た場合は呼び出し側で実数化する */
-  observedDamage: { min: number; max: number };
-  /** 探索する努力値の対象（B か D） */
+  /** 画面に表示された相手の残り体力 (0〜100 の整数 %) */
+  observedRemainingPct: number;
+  /** 探索する能力ポイントの対象（B か D） */
   defenseStatKey: "def" | "spd";
-  /** 防御側の HP 努力値も探索する */
+  /** 防御側の HP 能力ポイントも探索する */
   searchHp?: boolean;
 }
 
 export interface ReverseCandidate {
-  hpEv: number;
-  defEv: number;
+  hpAp: number;
+  defAp: number;
   hpStat: number;
   defStat: number;
   rolls: number[];
@@ -28,44 +29,38 @@ export interface ReverseCandidate {
 
 /**
  * 観測ダメージから防御側の (HP振り, B/D振り) 候補を列挙する。
- * 努力値は 4 単位、性格補正は base.defender.natureId を尊重。
+ * 能力ポイントは 1 単位、性格補正は base.defender.natureId を尊重。
  */
 export function reverseEstimateDefense(input: ReverseDefenseInput): ReverseCandidate[] {
-  const { base, observedDamage, defenseStatKey, searchHp = true } = input;
+  const { base, observedRemainingPct, defenseStatKey, searchHp = true } = input;
   const def = base.defender;
   const species = resolveSpecies(def);
   const nature = NATURE_BY_ID[def.natureId] ?? NATURE_BY_ID["まじめ"];
   const candidates: ReverseCandidate[] = [];
 
-  const hpEvs = searchHp ? evList() : [def.evs.hp];
-  const defEvs = evList();
+  const hpAps = searchHp ? apList() : [def.aps.hp];
+  const defAps = apList();
 
   const defMul = natureMultiplier(nature, defenseStatKey);
 
-  for (const hpEv of hpEvs) {
-    const hpStat = calcHp(species.baseStats.hp, def.ivs.hp, hpEv, def.level);
-    for (const defEv of defEvs) {
-      const defStat = calcStat(
-        species.baseStats[defenseStatKey],
-        def.ivs[defenseStatKey],
-        defEv,
-        def.level,
-        defMul,
-      );
+  for (const hpAp of hpAps) {
+    const hpStat = calcHp(species.baseStats.hp, hpAp);
+    for (const defAp of defAps) {
+      const defStat = calcStat(species.baseStats[defenseStatKey], defAp, defMul);
 
       const tweaked: PokemonInstance = {
         ...def,
-        evs: { ...def.evs, hp: hpEv, [defenseStatKey]: defEv } as Stats,
+        aps: { ...def.aps, hp: hpAp, [defenseStatKey]: defAp } as Stats,
       };
 
       const result = calcDamage({ ...base, defender: tweaked });
       const matched = result.rolls.filter(
-        (d) => d >= observedDamage.min && d <= observedDamage.max,
+        (d) => Math.max(0, Math.round(((hpStat - d) / hpStat) * 100)) === observedRemainingPct,
       ).length;
       if (matched > 0) {
         candidates.push({
-          hpEv,
-          defEv,
+          hpAp,
+          defAp,
           hpStat,
           defStat,
           rolls: result.rolls,
@@ -78,7 +73,7 @@ export function reverseEstimateDefense(input: ReverseDefenseInput): ReverseCandi
   // matchRate 高い順 → 投資が少ない順（HP+B 合計）
   candidates.sort((a, b) => {
     if (b.matchRate !== a.matchRate) return b.matchRate - a.matchRate;
-    return a.hpEv + a.defEv - (b.hpEv + b.defEv);
+    return a.hpAp + a.defAp - (b.hpAp + b.defAp);
   });
   return candidates;
 }
@@ -93,24 +88,24 @@ export interface RequiredOffenseInput {
 }
 
 export interface RequiredOffenseResult {
-  evRequired: number;
+  apRequired: number;
   attackStat: number;
   oneShotRate: number;
   rolls: number[];
 }
 
-/** 達成条件を満たす最小の攻撃側 EV を求める（4 単位）。見つからなければ null */
+/** 達成条件を満たす最小の攻撃側能力ポイントを求める（1 単位）。見つからなければ null */
 export function findRequiredOffense(input: RequiredOffenseInput): RequiredOffenseResult | null {
   const { base, goal, offenseStatKey } = input;
-  for (const ev of evList()) {
+  for (const ap of apList()) {
     const tweaked: PokemonInstance = {
       ...base.attacker,
-      evs: { ...base.attacker.evs, [offenseStatKey]: ev } as Stats,
+      aps: { ...base.attacker.aps, [offenseStatKey]: ap } as Stats,
     };
     const r = calcDamage({ ...base, attacker: tweaked });
     if (meetsGoal(r.rolls, r.defenderHp, goal)) {
       return {
-        evRequired: ev,
+        apRequired: ap,
         attackStat: r.attackStat,
         oneShotRate: r.oneShotRate,
         rolls: r.rolls,
@@ -130,21 +125,17 @@ function meetsGoal(
     if (minDmg <= 0) return false;
     return Math.ceil(hp / minDmg) <= goal.turns;
   }
-  // highRollKo：N ターン以内に倒せる乱数の割合がしきい値以上
-  // 1ターンで倒せる乱数 = damage>=hp の割合
   if (goal.turns === 1) {
     const rate = rolls.filter((d) => d >= hp).length / rolls.length;
     return rate >= goal.rate;
   }
-  // 簡易：2ターン以上の高乱数判定は「最低ダメージ * (turns - 1) + 最高ダメージ >= HP」で代替
   const minDmg = rolls[0];
   const maxDmg = rolls[rolls.length - 1];
-  const possible = minDmg * (goal.turns - 1) + maxDmg >= hp;
-  return possible;
+  return minDmg * (goal.turns - 1) + maxDmg >= hp;
 }
 
-export function evList(): number[] {
+export function apList(): number[] {
   const out: number[] = [];
-  for (let e = 0; e <= 252; e += EV_STEP) out.push(e);
+  for (let a = 0; a <= AP_MAX; a += AP_STEP) out.push(a);
   return out;
 }

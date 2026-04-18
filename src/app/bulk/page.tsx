@@ -77,7 +77,7 @@ export default function BulkPage() {
           side="def"
         />
         <div className="panel space-y-3">
-          <div className="text-sm text-gray-400">探索する努力値の軸</div>
+          <div className="text-sm text-gray-400">探索する能力ポイントの軸</div>
           <div className="flex gap-3 text-sm">
             {(["hp", "def", "spd"] as const).map((k) => (
               <label key={k} className="inline-flex items-center gap-1">
@@ -91,7 +91,7 @@ export default function BulkPage() {
             ))}
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-            軸に含まれない項目は現在の防御側設定の努力値で固定。攻撃側の各脅威は下に追加してください。EV 合計は 510 を超えないよう自動で除外。
+            軸に含まれない項目は現在の防御側設定の能力ポイントで固定。攻撃側の各脅威は下に追加してください。能力ポイント合計は 66 を超えないよう自動で除外。
           </p>
         </div>
       </div>
@@ -107,11 +107,11 @@ export default function BulkPage() {
           {threats.map((t, i) => {
             const baselineRow = baseline.find((b) => b.id === t.id);
             return (
-              <div key={t.id} className="border border-border rounded p-3 space-y-3">
+              <div key={t.id} className="border border-slate-200 rounded p-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-sm">脅威 #{i + 1}</div>
                   <button
-                    className="text-xs text-bad"
+                    className="text-xs text-red-600"
                     onClick={() => setThreats(threats.filter((x) => x.id !== t.id))}
                   >
                     削除
@@ -207,7 +207,7 @@ export default function BulkPage() {
           推奨配分（投資の少ない順）— {plans.length} 件
         </div>
         {plans.length === 0 ? (
-          <div className="text-sm text-bad">
+          <div className="text-sm text-red-600">
             条件を満たす配分がありません。脅威を減らすか、軸を増やしてください。
           </div>
         ) : (
@@ -220,20 +220,18 @@ export default function BulkPage() {
                 <th>HP</th>
                 <th>B実数</th>
                 <th>D実数</th>
-                <th>余りEV</th>
                 <th>各脅威への被ダメ最大</th>
               </tr>
             </thead>
             <tbody>
               {plans.map((p, i) => (
-                <tr key={i} className="border-t border-border tabular-nums">
-                  <td className="py-1">{p.hpEv}</td>
-                  <td>{p.defEv}</td>
-                  <td>{p.spdEv}</td>
+                <tr key={i} className="border-t border-slate-200 tabular-nums">
+                  <td className="py-1">{p.hpAp}</td>
+                  <td>{p.defAp}</td>
+                  <td>{p.spdAp}</td>
                   <td>{p.hpStat}</td>
                   <td>{p.defStat}</td>
                   <td>{p.spdStat}</td>
-                  <td>{p.remainingEv}</td>
                   <td className="text-xs">
                     {p.perThreat.map((t) => `${t.maxPercent.toFixed(1)}%`).join(" / ")}
                   </td>

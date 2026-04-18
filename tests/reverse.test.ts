@@ -1,20 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { calcDamage } from "@/domain/damage";
 import { findRequiredOffense, reverseEstimateDefense } from "@/domain/reverse";
-import { makeEvs, makePokemon } from "@/domain/factory";
+import { calcHp } from "@/domain/stats";
+import { makeAps, makePokemon } from "@/domain/factory";
 import { MOVE_BY_ID } from "@/data/moves";
 
 describe("reverse", () => {
-  it("往復一致：H252/D252 ヒードランで観測したダメージから振りを推定でき、元の振りが候補に含まれる", () => {
+  it("往復一致：AP=0 ヒードランで観測した残り体力%から振りを推定でき、元の振りが候補に含まれる", () => {
     const attacker = makePokemon("garchomp", {
       natureId: "ようき",
       ability: "さめはだ",
-      evs: makeEvs({ atk: 252, spe: 252 }),
+      aps: makeAps({ atk: 32, spe: 32 }),
     });
     const defender = makePokemon("heatran", {
       natureId: "おだやか",
       ability: "もらいび",
-      evs: makeEvs({ hp: 252, spd: 252, def: 4 }),
+      aps: makeAps({}),
     });
     const base = {
       attacker,
@@ -23,30 +24,31 @@ describe("reverse", () => {
       field: { weather: "なし" as const, terrain: "なし" as const },
     };
     const result = calcDamage(base);
+    // AP=0 ヒードランの HP 実数値から、最小ダメージ時の残り体力% を算出して入力値とする
+    const hpStat = calcHp(91, 0); // ヒードラン base HP = 91
+    const remainingPct = Math.max(0, Math.round(((hpStat - result.min) / hpStat) * 100));
 
-    // 観測：実数 min..max のレンジが見えた、と仮定して逆引き
     const candidates = reverseEstimateDefense({
       base,
-      observedDamage: { min: result.min, max: result.max },
+      observedRemainingPct: remainingPct,
       defenseStatKey: "def",
     });
 
     expect(candidates.length).toBeGreaterThan(0);
-    const matched = candidates.find((c) => c.hpEv === 252 && c.defEv === 4);
+    const matched = candidates.find((c) => c.hpAp === 0 && c.defAp === 0);
     expect(matched).toBeDefined();
-    expect(matched?.matchRate).toBe(1);
   });
 
-  it("必要火力：ガブで H4 ヒードランを確定1発に必要な A 努力値は 0 で足りる", () => {
+  it("必要火力：ガブで AP=0 ヒードランを確定1発に必要な A 能力ポイントは 0 で足りる", () => {
     const attacker = makePokemon("garchomp", {
       natureId: "ようき",
       ability: "さめはだ",
-      evs: makeEvs({ spe: 252 }), // ATK は 0 から探索
+      aps: makeAps({ spe: 32 }),
     });
     const defender = makePokemon("heatran", {
       natureId: "おだやか",
       ability: "もらいび",
-      evs: makeEvs({ hp: 4 }),
+      aps: makeAps({}),
     });
     const r = findRequiredOffense({
       base: {
@@ -59,19 +61,19 @@ describe("reverse", () => {
       offenseStatKey: "atk",
     });
     expect(r).not.toBeNull();
-    expect(r?.evRequired).toBe(0);
+    expect(r?.apRequired).toBe(0);
   });
 
-  it("必要火力：素ガブの じしん で H252/B252 ハッサム わんぱくを確定1発するには A 努力値が大きく必要", () => {
+  it("必要火力：素ガブの じしん で H50/B50 ハッサム わんぱくを確定1発するには AP=50 でも足りない", () => {
     const attacker = makePokemon("garchomp", {
       natureId: "いじっぱり",
       ability: "さめはだ",
-      evs: makeEvs({ spe: 0 }),
+      aps: makeAps({}),
     });
     const defender = makePokemon("scizor", {
       natureId: "わんぱく",
       ability: "テクニシャン",
-      evs: makeEvs({ hp: 252, def: 252 }),
+      aps: makeAps({ hp: 50, def: 50 }),
     });
     const r = findRequiredOffense({
       base: {
@@ -83,9 +85,7 @@ describe("reverse", () => {
       goal: { kind: "guaranteedKo", turns: 1 },
       offenseStatKey: "atk",
     });
-    // 等倍 1HKO は厳しい。null か非常に大きい EV のはず
-    if (r) {
-      expect(r.evRequired).toBeGreaterThan(200);
-    }
+    // 等倍 1HKO は最大 AP=50 でも達成できない
+    expect(r).toBeNull();
   });
 });

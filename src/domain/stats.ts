@@ -1,24 +1,22 @@
 import type { Nature, StatKey, Stats } from "./types";
 
 /**
- * 通常ステータス（HP 以外）の実数値計算（第3世代以降同式）。
- *   floor( (floor((2*B + I + floor(E/4)) * L / 100) + 5) * nature )
+ * HP 以外の実数値（チャンピオンズ式）
+ *   floor( (floor((2*B + 31 + AP*2) * 50/100) + 5) * nature )
  */
 export function calcStat(
   base: number,
-  iv: number,
-  ev: number,
-  level: number,
+  ap: number,
   natureMultiplier: 1 | 1.1 | 0.9,
 ): number {
-  const inner = Math.floor((2 * base + iv + Math.floor(ev / 4)) * level / 100) + 5;
+  const inner = Math.floor((2 * base + 31 + ap * 2) * 50 / 100) + 5;
   return Math.floor(inner * natureMultiplier);
 }
 
-/** HP 実数値： floor((2*B + I + floor(E/4)) * L / 100) + L + 10 */
-export function calcHp(base: number, iv: number, ev: number, level: number): number {
+/** HP 実数値： floor((2*B + 31 + AP*2) * 50/100) + 60 */
+export function calcHp(base: number, ap: number): number {
   if (base === 1) return 1; // ヌケニン
-  return Math.floor((2 * base + iv + Math.floor(ev / 4)) * level / 100) + level + 10;
+  return Math.floor((2 * base + 31 + ap * 2) * 50 / 100) + 60;
 }
 
 export function natureMultiplier(
@@ -32,18 +30,16 @@ export function natureMultiplier(
 
 export function buildActualStats(
   base: Stats,
-  ivs: Stats,
-  evs: Stats,
-  level: number,
+  aps: Stats,
   nature: Nature,
 ): Stats {
   return {
-    hp: calcHp(base.hp, ivs.hp, evs.hp, level),
-    atk: calcStat(base.atk, ivs.atk, evs.atk, level, natureMultiplier(nature, "atk")),
-    def: calcStat(base.def, ivs.def, evs.def, level, natureMultiplier(nature, "def")),
-    spa: calcStat(base.spa, ivs.spa, evs.spa, level, natureMultiplier(nature, "spa")),
-    spd: calcStat(base.spd, ivs.spd, evs.spd, level, natureMultiplier(nature, "spd")),
-    spe: calcStat(base.spe, ivs.spe, evs.spe, level, natureMultiplier(nature, "spe")),
+    hp: calcHp(base.hp, aps.hp),
+    atk: calcStat(base.atk, aps.atk, natureMultiplier(nature, "atk")),
+    def: calcStat(base.def, aps.def, natureMultiplier(nature, "def")),
+    spa: calcStat(base.spa, aps.spa, natureMultiplier(nature, "spa")),
+    spd: calcStat(base.spd, aps.spd, natureMultiplier(nature, "spd")),
+    spe: calcStat(base.spe, aps.spe, natureMultiplier(nature, "spe")),
   };
 }
 

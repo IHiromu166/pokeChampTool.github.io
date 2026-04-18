@@ -19,14 +19,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body>
-        <header className="border-b border-border bg-surface">
+        <header className="border-b border-slate-200 bg-white">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
-            <Link href="/" className="font-semibold text-accent">
+            <Link href="/" className="font-semibold text-blue-600">
               ポケダメ計算
             </Link>
             <nav className="flex gap-4 text-sm">
               {NAV.slice(1).map((n) => (
-                <Link key={n.href} href={n.href} className="hover:text-accent">
+                <Link key={n.href} href={n.href} className="hover:text-blue-600">
                   {n.label}
                 </Link>
               ))}

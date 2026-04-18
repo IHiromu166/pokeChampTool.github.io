@@ -84,20 +84,8 @@ export function calcDamage(input: DamageInput): DamageResult {
   const atkNature = NATURE_BY_ID[attacker.natureId] ?? NATURE_BY_ID["まじめ"];
   const defNature = NATURE_BY_ID[defender.natureId] ?? NATURE_BY_ID["まじめ"];
 
-  const atkStats = buildActualStats(
-    atkSpecies.baseStats,
-    attacker.ivs,
-    attacker.evs,
-    attacker.level,
-    atkNature,
-  );
-  const defStats = buildActualStats(
-    defSpecies.baseStats,
-    defender.ivs,
-    defender.evs,
-    defender.level,
-    defNature,
-  );
+  const atkStats = buildActualStats(atkSpecies.baseStats, attacker.aps, atkNature);
+  const defStats = buildActualStats(defSpecies.baseStats, defender.aps, defNature);
 
   const isPhysical = move.category === "物理";
   const atkKey = isPhysical ? "atk" : "spa";
@@ -138,9 +126,8 @@ export function calcDamage(input: DamageInput): DamageResult {
     A = A * 2;
   }
 
-  // ── ベースダメージ ──
-  const L = attacker.level;
-  let base = Math.floor(Math.floor(Math.floor((2 * L) / 5 + 2) * move.power * A / D) / 50) + 2;
+  // ── ベースダメージ（レベル50固定） ──
+  let base = Math.floor(Math.floor(22 * move.power * A / D) / 50) + 2;
 
   // ── 補正 ──
   const modifiers: number[] = [];
@@ -242,11 +229,10 @@ function zeroResult(): DamageResult {
   };
 }
 
-/** EV を変えながら同じ計算をする際に使う、build 結果ベースの計算ヘルパ */
+/** AP を変えながら同じ計算をする際に使う、build 結果ベースの計算ヘルパ */
 export interface PrebuiltContext {
   atkSpeciesTypes: readonly Type[];
   defSpeciesTypes: readonly Type[];
-  level: number;
   movePower: number;
   moveType: Type;
   isPhysical: boolean;
@@ -255,10 +241,7 @@ export interface PrebuiltContext {
 }
 
 export function damageRollsRaw(A: number, D: number, ctx: PrebuiltContext): number[] {
-  let base =
-    Math.floor(
-      Math.floor(Math.floor((2 * ctx.level) / 5 + 2) * ctx.movePower * A / D) / 50,
-    ) + 2;
+  const base = Math.floor(Math.floor(22 * ctx.movePower * A / D) / 50) + 2;
   const m = chain(...ctx.baseModifiers, ctx.typeEffectiveness);
   return RANDOM_ROLLS.map((r) => Math.floor(base * m * r));
 }

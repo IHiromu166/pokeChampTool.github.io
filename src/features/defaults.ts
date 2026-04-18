@@ -1,4 +1,4 @@
-import { makeEvs, makePokemon, PERFECT_IVS } from "@/domain/factory";
+import { makeAps, makePokemon } from "@/domain/factory";
 import type { FieldState, PokemonInstance } from "@/domain/types";
 
 export function defaultAttacker(): PokemonInstance {
@@ -6,8 +6,7 @@ export function defaultAttacker(): PokemonInstance {
     natureId: "ようき",
     ability: "さめはだ",
     item: "なし",
-    evs: makeEvs({ atk: 252, spe: 252, hp: 4 }),
-    ivs: PERFECT_IVS,
+    aps: makeAps({ atk: 32, spe: 32 }),
   });
 }
 
@@ -16,8 +15,7 @@ export function defaultDefender(): PokemonInstance {
     natureId: "わんぱく",
     ability: "テクニシャン",
     item: "なし",
-    evs: makeEvs({ hp: 252, def: 252 }),
-    ivs: PERFECT_IVS,
+    aps: makeAps({ hp: 32, def: 32 }),
   });
 }
 

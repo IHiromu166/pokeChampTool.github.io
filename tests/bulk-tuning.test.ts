@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { tuneBulk, type Threat } from "@/domain/bulk-tuning";
-import { makeEvs, makePokemon } from "@/domain/factory";
+import { makeAps, makePokemon } from "@/domain/factory";
 import { MOVE_BY_ID } from "@/data/moves";
 
 describe("bulk-tuning", () => {
@@ -8,7 +8,7 @@ describe("bulk-tuning", () => {
     const defender = makePokemon("hydreigon", {
       natureId: "おだやか",
       ability: "ふゆう",
-      evs: makeEvs({}, 0),
+      aps: makeAps({}),
     });
 
     const threats: Threat[] = [
@@ -19,7 +19,7 @@ describe("bulk-tuning", () => {
             natureId: "いじっぱり",
             ability: "いかく",
             item: "クチートナイト",
-            evs: makeEvs({ atk: 252 }),
+            aps: makeAps({ atk: 32 }),
             mega: true,
           }),
           defender,
@@ -38,16 +38,15 @@ describe("bulk-tuning", () => {
     });
 
     expect(plans.length).toBeGreaterThan(0);
-    // すべての提案が脅威を耐えていること
     for (const p of plans) {
       expect(p.perThreat.every((t) => t.survives)).toBe(true);
     }
     // 最小投資のプランが先頭
     const sorted = [...plans].sort(
-      (a, b) => a.hpEv + a.defEv + a.spdEv - (b.hpEv + b.defEv + b.spdEv),
+      (a, b) => a.hpAp + a.defAp + a.spdAp - (b.hpAp + b.defAp + b.spdAp),
     );
-    expect(plans[0].hpEv + plans[0].defEv + plans[0].spdEv).toBe(
-      sorted[0].hpEv + sorted[0].defEv + sorted[0].spdEv,
+    expect(plans[0].hpAp + plans[0].defAp + plans[0].spdAp).toBe(
+      sorted[0].hpAp + sorted[0].defAp + sorted[0].spdAp,
     );
   });
 });

@@ -82,17 +82,14 @@ export interface Nature {
   minus?: Exclude<StatKey, "hp">;
 }
 
-export type EvSpread = Stats;
-export type IvSpread = Stats;
+export type ApSpread = Stats;
 
 export interface PokemonInstance {
   speciesId: string;
-  level: number;
   natureId: string;
   ability: string;
   item?: string;
-  evs: EvSpread;
-  ivs: IvSpread;
+  aps: ApSpread;
   /** ランク補正 (-6 〜 +6) */
   boosts?: Partial<Record<Exclude<StatKey, "hp">, number>>;
   status?: "やけど" | "なし";

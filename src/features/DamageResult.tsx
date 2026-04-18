@@ -47,8 +47,8 @@ export function DamageResultView({ result }: Props) {
               key={i}
               className={`px-1 py-0.5 rounded text-center border ${
                 d >= result.defenderHp
-                  ? "border-good text-good"
-                  : "border-border text-gray-300"
+                  ? "border-green-500 text-green-600"
+                  : "border-slate-200 text-gray-500"
               }`}
               title={`${pct(d)}%`}
             >
@@ -77,8 +77,8 @@ function describeKo(r: DamageResult): string {
 }
 
 function koColorClass(r: DamageResult): string {
-  if (r.oneShotRate >= 1) return "text-good";
-  if (r.oneShotRate > 0) return "text-warn";
-  if (r.guaranteedKoTurns && r.guaranteedKoTurns <= 2) return "text-warn";
-  return "text-gray-300";
+  if (r.oneShotRate >= 1) return "text-green-600";
+  if (r.oneShotRate > 0) return "text-amber-600";
+  if (r.guaranteedKoTurns && r.guaranteedKoTurns <= 2) return "text-amber-600";
+  return "text-gray-500";
 }

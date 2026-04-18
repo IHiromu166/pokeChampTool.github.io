@@ -32,7 +32,7 @@ export default function Home() {
       <div className="grid sm:grid-cols-3 gap-4">
         {CARDS.map((c) => (
           <Link key={c.href} href={c.href} className="panel hover:border-accent transition">
-            <h2 className="font-semibold text-accent mb-2">{c.title}</h2>
+            <h2 className="font-semibold text-blue-600 mb-2">{c.title}</h2>
             <p className="text-sm text-gray-400 leading-relaxed">{c.desc}</p>
           </Link>
         ))}

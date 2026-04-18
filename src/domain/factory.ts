@@ -1,10 +1,6 @@
 import type { PokemonInstance, Stats } from "./types";
 
-export function fullEv(stat: keyof Stats, base = 0): Stats {
-  return makeEvs({ [stat]: 252 } as Partial<Stats>, base);
-}
-
-export function makeEvs(partial: Partial<Stats>, fill = 0): Stats {
+export function makeAps(partial: Partial<Stats>, fill = 0): Stats {
   return {
     hp: partial.hp ?? fill,
     atk: partial.atk ?? fill,
@@ -15,16 +11,7 @@ export function makeEvs(partial: Partial<Stats>, fill = 0): Stats {
   };
 }
 
-export const PERFECT_IVS: Stats = {
-  hp: 31,
-  atk: 31,
-  def: 31,
-  spa: 31,
-  spd: 31,
-  spe: 31,
-};
-
-export const ZERO_EVS: Stats = makeEvs({}, 0);
+export const ZERO_APS: Stats = makeAps({}, 0);
 
 export function makePokemon(
   speciesId: string,
@@ -32,12 +19,10 @@ export function makePokemon(
 ): PokemonInstance {
   return {
     speciesId,
-    level: opts.level ?? 50,
     natureId: opts.natureId ?? "まじめ",
     ability: opts.ability ?? "",
     item: opts.item,
-    evs: opts.evs ?? ZERO_EVS,
-    ivs: opts.ivs ?? PERFECT_IVS,
+    aps: opts.aps ?? ZERO_APS,
     boosts: opts.boosts,
     status: opts.status,
     mega: opts.mega,
