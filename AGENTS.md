@@ -106,6 +106,12 @@ tests/              vitest テスト (damage / stats / reverse / bulk-tuning)
 - PR は main 向け。マージ後に GitHub Actions が `main` への push を検知して自動デプロイ
 - destructive 操作(`git push --force`、`reset --hard` など)は原則禁止。必要なら人間に確認
 
+### PR 作成時のデフォルト方針(確認不要で適用)
+
+- 直前の作業ブランチが別目的(例: `docs/...` で進行中)の場合、今回の変更用に**新しいブランチを切ってから** PR を作成する。ベースは原則 `main`
+- **依頼と無関係な変更は PR に含めない**。作業中に見つかった未コミットの無関係な変更(他ファイルの差分や untracked ファイル)はステージせず、依頼に該当するファイルのみを `git add <path>` で個別に追加する
+- **`.claude/settings.local.json` の permission 追加分は PR に含めない**。個人環境の設定であり、コミット対象外
+
 ## デプロイ
 
 - `.github/workflows/nextjs.yml` が `main` への push で起動
