@@ -222,37 +222,37 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
 
       <div>
         <div className="label mb-1">ランク補正</div>
-        <div className="grid grid-cols-5 gap-1 text-xs">
+        <div className="grid grid-cols-5 gap-2 text-xs">
           {(["atk", "def", "spa", "spd", "spe"] as const).map((k) => {
             const current = value.boosts?.[k] ?? 0;
             return (
-              <div key={k} className="flex items-center gap-1">
-                <span className="text-gray-400 w-3">{STAT_LABEL[k]}</span>
+              <div key={k} className="flex flex-col items-center gap-1">
+                <span className="text-gray-400">{STAT_LABEL[k]}</span>
                 <button
                   type="button"
-                  className="input w-6 px-0 text-center"
-                  aria-label={`${STAT_LABEL[k]} ランクを 1 下げる`}
-                  onClick={() => updateBoost(k, current - 1)}
-                  disabled={current <= -6}
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  min={-6}
-                  max={6}
-                  className="input w-10 text-center"
-                  value={current}
-                  onChange={(e) => updateBoost(k, Number(e.target.value))}
-                />
-                <button
-                  type="button"
-                  className="input w-6 px-0 text-center"
+                  className="input w-full px-0 py-0.5 text-center"
                   aria-label={`${STAT_LABEL[k]} ランクを 1 上げる`}
                   onClick={() => updateBoost(k, current + 1)}
                   disabled={current >= 6}
                 >
                   +
+                </button>
+                <input
+                  type="number"
+                  min={-6}
+                  max={6}
+                  className="input w-full text-center"
+                  value={current}
+                  onChange={(e) => updateBoost(k, Number(e.target.value))}
+                />
+                <button
+                  type="button"
+                  className="input w-full px-0 py-0.5 text-center"
+                  aria-label={`${STAT_LABEL[k]} ランクを 1 下げる`}
+                  onClick={() => updateBoost(k, current - 1)}
+                  disabled={current <= -6}
+                >
+                  −
                 </button>
               </div>
             );
