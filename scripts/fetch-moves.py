@@ -21,8 +21,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = Path(__file__).resolve().parent / "cache"
 OUT = ROOT / "src" / "data" / "moves.ts"
+ZMAX_JSON = Path(__file__).resolve().parent / "showdown-zmax.json"
 
 GEN_LIMIT = 9  # Generation IX (SV) まで
+
+
+def load_excluded_slugs() -> set[str]:
+    """Showdown の Z技 / ダイマックス技キーを PokéAPI スラグ形式に変換した集合を返す。
+
+    Showdown キーは `breakneckblitz` のような英小文字無記号、PokéAPI スラグは
+    `breakneck-blitz` のようなハイフン区切り。比較時はハイフン除去で揃える。
+    """
+    if not ZMAX_JSON.exists():
+        print(f"warning: {ZMAX_JSON} が見つかりません。Z/Max 除外なしで進めます。", file=sys.stderr)
+        return set()
+    data = json.loads(ZMAX_JSON.read_text())
+    return set(data.get("isZ", [])) | set(data.get("isMax", []))
 
 # PokéAPI type name -> repo Type 文字列
 TYPE_JA = {
@@ -304,6 +318,9 @@ def to_ts_entry(m: dict) -> str:
 
 
 def main() -> int:
+    excluded = load_excluded_slugs()
+    print(f"[0/3] Z/Max excluded keys: {len(excluded)}", file=sys.stderr)
+
     print("[1/3] Listing moves...", file=sys.stderr)
     moves_idx = list_moves()
     print(f"  total {len(moves_idx)} moves in PokéAPI", file=sys.stderr)
@@ -329,10 +346,16 @@ def main() -> int:
     skipped_no_ja = 0
     skipped_no_type = 0
     skipped_post_gen9 = 0
+    skipped_zmax = 0
     for d in fetched:
         gen = parse_gen(d["generation"]["name"])
         if gen > GEN_LIMIT:
             skipped_post_gen9 += 1
+            continue
+        # Showdown ベースで Z技 / ダイマックス技を除外
+        slug_key = d["name"].replace("-", "")
+        if slug_key in excluded:
+            skipped_zmax += 1
             continue
         ja = ja_name(d["names"])
         if not ja:
@@ -371,7 +394,7 @@ def main() -> int:
 
     print(
         f"  output {len(out_rows)} (skipped: post-gen9={skipped_post_gen9}, "
-        f"no-ja={skipped_no_ja}, no-type={skipped_no_type})",
+        f"z/max={skipped_zmax}, no-ja={skipped_no_ja}, no-type={skipped_no_type})",
         file=sys.stderr,
     )
 
