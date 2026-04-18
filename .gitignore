@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+dist
+.DS_Store
+*.log
+.env*
+.vercel
+.turbo
+coverage
+.vitest-cache
+next-env.d.ts
