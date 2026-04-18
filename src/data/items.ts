@@ -28,14 +28,7 @@ export interface ItemData {
 
 export const ITEMS: ItemData[] = [
   { id: "なし", name: "なし" },
-  { id: "こだわりハチマキ", name: "こだわりハチマキ", choiceBand: true },
-  { id: "こだわりメガネ", name: "こだわりメガネ", choiceSpecs: true },
   { id: "こだわりスカーフ", name: "こだわりスカーフ", choiceScarf: true },
-  { id: "いのちのたま", name: "いのちのたま", lifeOrb: true },
-  { id: "たつじんのおび", name: "たつじんのおび", expertBelt: true },
-  { id: "ちからのハチマキ", name: "ちからのハチマキ", muscleBand: true },
-  { id: "ものしりメガネ", name: "ものしりメガネ", wiseGlasses: true },
-  { id: "しんかのきせき", name: "しんかのきせき", eviolite: true },
   // タイプ強化アイテム（よく使う物のみ）
   { id: "もくたん", name: "もくたん", typeBoostType: "ほのお" },
   { id: "しんぴのしずく", name: "しんぴのしずく", typeBoostType: "みず" },
