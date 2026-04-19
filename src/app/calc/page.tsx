@@ -38,7 +38,11 @@ export default function CalcPage() {
           side="def"
         />
         <div className="space-y-4">
-          <MovePicker value={moveId} onChange={setMoveId} />
+          <MovePicker
+            value={moveId}
+            onChange={setMoveId}
+            attackerSpeciesId={attacker.speciesId}
+          />
           <FieldForm value={field} onChange={setField} />
         </div>
       </div>
