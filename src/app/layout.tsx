@@ -12,7 +12,7 @@ const NAV = [
   { href: "/", label: "ホーム" },
   { href: "/calc", label: "ダメージ計算" },
   { href: "/reverse", label: "逆引き" },
-  { href: "/bulk", label: "耐久調整" },
+  { href: "/bulk", label: "ステータス調整" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
