@@ -56,15 +56,18 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
     setNameQuery(baseSpecies.name);
   }, [baseSpecies.name]);
   const nameMatches = useMemo(() => {
-    const q = nameQuery.trim().toLowerCase();
+    const q = normalizeName(nameQuery);
     if (!q) return selectablePokemon;
-    return selectablePokemon.filter((p) => p.name.toLowerCase().includes(q));
+    return selectablePokemon.filter((p) => normalizeName(p.name).includes(q));
   }, [nameQuery, selectablePokemon]);
   const commitName = (raw: string) => {
     const q = raw.trim();
     if (!q) return;
-    const exact = selectablePokemon.find((p) => p.name === q);
-    const hit = exact ?? selectablePokemon.find((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+    const nq = normalizeName(q);
+    const exact =
+      selectablePokemon.find((p) => p.name === q) ??
+      selectablePokemon.find((p) => normalizeName(p.name) === nq);
+    const hit = exact ?? selectablePokemon.find((p) => normalizeName(p.name).includes(nq));
     if (!hit || hit.id === value.speciesId) {
       setNameQuery(baseSpecies.name);
       return;
@@ -139,7 +142,7 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
             list={`pokemon-list-${side}`}
             value={nameQuery}
             placeholder="名前で検索"
-            onChange={(e) => setNameQuery(e.target.value)}
+            onChange={(e) => setNameQuery(hiraganaToKatakana(e.target.value))}
             onBlur={(e) => commitName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -328,4 +331,12 @@ function clampBoost(n: number): number {
 }
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
+}
+function normalizeName(s: string): string {
+  return hiraganaToKatakana(s.trim().toLowerCase());
+}
+function hiraganaToKatakana(s: string): string {
+  return s.replace(/[\u3041-\u3096]/g, (ch) =>
+    String.fromCharCode(ch.charCodeAt(0) + 0x60),
+  );
 }
