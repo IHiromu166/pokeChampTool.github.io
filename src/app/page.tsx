@@ -37,6 +37,13 @@ export default function Home() {
           </Link>
         ))}
       </div>
+      <div className="panel">
+        <p className="text-xs text-gray-400 leading-relaxed">
+          作成者: いのむ (aka ShowGuy)
+          <br />
+          本ツールはファンメイドの非公式ツールです。
+        </p>
+      </div>
     </div>
   );
 }
