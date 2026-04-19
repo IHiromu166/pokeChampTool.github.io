@@ -6,6 +6,7 @@ import { MOVE_BY_ID } from "@/data/moves";
 import { PokemonForm } from "@/features/PokemonForm";
 import { FieldForm } from "@/features/FieldForm";
 import { MovePicker } from "@/features/MovePicker";
+import { resolveMove, type MoveOverride } from "@/features/moveOverride";
 import { DamageResultView } from "@/features/DamageResult";
 import { defaultAttacker, defaultDefender, defaultField } from "@/features/defaults";
 
@@ -14,12 +15,19 @@ export default function CalcPage() {
   const [defender, setDefender] = useState(defaultDefender);
   const [field, setField] = useState(defaultField);
   const [moveId, setMoveId] = useState("じしん");
+  const [moveOverride, setMoveOverride] = useState<MoveOverride>({});
+
+  const selectMove = (id: string) => {
+    setMoveId(id);
+    setMoveOverride({});
+  };
 
   const result = useMemo(() => {
-    const move = MOVE_BY_ID[moveId];
-    if (!move) return null;
+    const base = MOVE_BY_ID[moveId];
+    if (!base) return null;
+    const move = resolveMove(base, moveOverride);
     return calcDamage({ attacker, defender, move, field });
-  }, [attacker, defender, moveId, field]);
+  }, [attacker, defender, moveId, moveOverride, field]);
 
   return (
     <div className="space-y-4">
@@ -40,7 +48,9 @@ export default function CalcPage() {
         <div className="space-y-4">
           <MovePicker
             value={moveId}
-            onChange={setMoveId}
+            onChange={selectMove}
+            override={moveOverride}
+            onOverrideChange={setMoveOverride}
             attackerSpeciesId={attacker.speciesId}
           />
           <FieldForm value={field} onChange={setField} />

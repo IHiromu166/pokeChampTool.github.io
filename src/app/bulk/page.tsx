@@ -8,7 +8,7 @@ import { findRequiredOffense, type RequiredOffenseResult } from "@/domain/revers
 import { PokemonForm } from "@/features/PokemonForm";
 import { FieldForm } from "@/features/FieldForm";
 import { MovePicker } from "@/features/MovePicker";
-import { getAttackerMoveOptions } from "@/features/moveOptions";
+import { resolveMove, type MoveOverride } from "@/features/moveOverride";
 import { defaultAttacker, defaultDefender, defaultField } from "@/features/defaults";
 import type { PokemonInstance } from "@/domain/types";
 
@@ -18,6 +18,7 @@ interface ThreatRow {
   id: string;
   attacker: PokemonInstance;
   moveId: string;
+  moveOverride: MoveOverride;
   goalKind: "survive" | "lessThan";
   rate: number;
 }
@@ -27,6 +28,7 @@ const newThreatRow = (): ThreatRow => ({
   id: `t${threatId++}`,
   attacker: defaultAttacker(),
   moveId: "じしん",
+  moveOverride: {},
   goalKind: "survive",
   rate: 0,
 });
@@ -45,14 +47,21 @@ export default function BulkPage() {
   const [reqDefender, setReqDefender] = useState(defaultDefender);
   const [reqField, setReqField] = useState(defaultField);
   const [reqMoveId, setReqMoveId] = useState("じしん");
+  const [reqMoveOverride, setReqMoveOverride] = useState<MoveOverride>({});
   const [goal, setGoal] = useState<"guaranteedKo" | "highRollKo">("guaranteedKo");
   const [highRollRate, setHighRollRate] = useState(0.5);
   const [offenseStat, setOffenseStat] = useState<"atk" | "spa">("atk");
 
+  const selectReqMove = (id: string) => {
+    setReqMoveId(id);
+    setReqMoveOverride({});
+  };
+
   const compiledThreats: Threat[] = threats
     .map((t) => {
-      const move = MOVE_BY_ID[t.moveId];
-      if (!move) return null;
+      const base = MOVE_BY_ID[t.moveId];
+      if (!base) return null;
+      const move = resolveMove(base, t.moveOverride);
       return {
         id: t.id,
         input: { attacker: t.attacker, defender, move, field },
@@ -85,7 +94,8 @@ export default function BulkPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, JSON.stringify(threats), defender]);
 
-  const reqMove = MOVE_BY_ID[reqMoveId];
+  const reqBaseMove = MOVE_BY_ID[reqMoveId];
+  const reqMove = reqBaseMove ? resolveMove(reqBaseMove, reqMoveOverride) : undefined;
   const reqBaseInput =
     reqMove ? { attacker: reqAttacker, defender: reqDefender, move: reqMove, field: reqField } : null;
   const reqLiveResult = reqBaseInput ? calcDamage(reqBaseInput) : null;
@@ -183,26 +193,26 @@ export default function BulkPage() {
                         side="atk"
                       />
                       <div className="space-y-2">
-                        <label className="space-y-1 block">
-                          <div className="label">技</div>
-                          <select
-                            className="input"
-                            value={t.moveId}
-                            onChange={(e) =>
-                              setThreats(
-                                threats.map((x) =>
-                                  x.id === t.id ? { ...x, moveId: e.target.value } : x,
-                                ),
-                              )
-                            }
-                          >
-                            {getAttackerMoveOptions(t.attacker.speciesId, t.moveId).map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
+                        <MovePicker
+                          value={t.moveId}
+                          onChange={(id) =>
+                            setThreats(
+                              threats.map((x) =>
+                                x.id === t.id ? { ...x, moveId: id, moveOverride: {} } : x,
+                              ),
+                            )
+                          }
+                          override={t.moveOverride}
+                          onOverrideChange={(next) =>
+                            setThreats(
+                              threats.map((x) =>
+                                x.id === t.id ? { ...x, moveOverride: next } : x,
+                              ),
+                            )
+                          }
+                          attackerSpeciesId={t.attacker.speciesId}
+                          variant="bare"
+                        />
                         <label className="space-y-1 block">
                           <div className="label">達成条件</div>
                           <div className="flex items-center gap-2 text-sm">
@@ -316,7 +326,9 @@ export default function BulkPage() {
             <div className="space-y-4">
               <MovePicker
                 value={reqMoveId}
-                onChange={setReqMoveId}
+                onChange={selectReqMove}
+                override={reqMoveOverride}
+                onOverrideChange={setReqMoveOverride}
                 attackerSpeciesId={reqAttacker.speciesId}
               />
               <FieldForm value={reqField} onChange={setReqField} />
