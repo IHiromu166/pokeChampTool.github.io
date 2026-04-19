@@ -13,6 +13,7 @@ import {
 import { PokemonForm } from "@/features/PokemonForm";
 import { FieldForm } from "@/features/FieldForm";
 import { MovePicker } from "@/features/MovePicker";
+import { resolveMove, type MoveOverride } from "@/features/moveOverride";
 import { defaultAttacker, defaultDefender, defaultField } from "@/features/defaults";
 
 type SelfSide = "atk" | "def";
@@ -23,13 +24,20 @@ export default function ReversePage() {
   const [defender, setDefender] = useState(defaultDefender);
   const [field, setField] = useState(defaultField);
   const [moveId, setMoveId] = useState("じしん");
+  const [moveOverride, setMoveOverride] = useState<MoveOverride>({});
 
   const [observedRemainingPct, setObservedRemainingPct] = useState(63);
   const [observedRemainingHp, setObservedRemainingHp] = useState(100);
   const [defStat, setDefStat] = useState<"def" | "spd">("def");
   const [offenseStat, setOffenseStat] = useState<"atk" | "spa">("atk");
 
-  const move = MOVE_BY_ID[moveId];
+  const selectMove = (id: string) => {
+    setMoveId(id);
+    setMoveOverride({});
+  };
+
+  const baseMove = MOVE_BY_ID[moveId];
+  const move = baseMove ? resolveMove(baseMove, moveOverride) : undefined;
   const baseInput = move ? { attacker, defender, move, field } : null;
   const liveResult = baseInput ? calcDamage(baseInput) : null;
 
@@ -91,7 +99,9 @@ export default function ReversePage() {
         <div className="space-y-4">
           <MovePicker
             value={moveId}
-            onChange={setMoveId}
+            onChange={selectMove}
+            override={moveOverride}
+            onOverrideChange={setMoveOverride}
             attackerSpeciesId={attacker.speciesId}
           />
           <FieldForm value={field} onChange={setField} />
