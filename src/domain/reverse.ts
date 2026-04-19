@@ -78,6 +78,50 @@ export function reverseEstimateDefense(input: ReverseDefenseInput): ReverseCandi
   return candidates;
 }
 
+export interface ReverseOffenseInput {
+  base: DamageInput;
+  /** 観測した防御側残HPの実数値 */
+  observedRemainingHp: number;
+  offenseStatKey: "atk" | "spa";
+}
+
+export interface ReverseOffenseCandidate {
+  atkAp: number;
+  attackStat: number;
+  rolls: number[];
+  matchRate: number;
+}
+
+export function reverseEstimateOffense(input: ReverseOffenseInput): ReverseOffenseCandidate[] {
+  const { base, observedRemainingHp, offenseStatKey } = input;
+  const candidates: ReverseOffenseCandidate[] = [];
+
+  for (const ap of apList()) {
+    const tweaked: PokemonInstance = {
+      ...base.attacker,
+      aps: { ...base.attacker.aps, [offenseStatKey]: ap } as Stats,
+    };
+    const result = calcDamage({ ...base, attacker: tweaked });
+    const matched = result.rolls.filter(
+      (d) => Math.max(0, result.defenderHp - d) === observedRemainingHp,
+    ).length;
+    if (matched > 0) {
+      candidates.push({
+        atkAp: ap,
+        attackStat: result.attackStat,
+        rolls: result.rolls,
+        matchRate: matched / 16,
+      });
+    }
+  }
+
+  candidates.sort((a, b) => {
+    if (b.matchRate !== a.matchRate) return b.matchRate - a.matchRate;
+    return a.atkAp - b.atkAp;
+  });
+  return candidates;
+}
+
 export interface RequiredOffenseInput {
   base: DamageInput;
   /** "確定1発" or "乱数1発N%以上" or "乱数2発N%以上" */
