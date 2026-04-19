@@ -34,8 +34,10 @@ export const POKEMON: PokemonSpecies[] = [
     baseStats: { hp: 78, atk: 84, def: 78, spa: 109, spd: 85, spe: 100 },
     abilities: ["もうか", "サンパワー"],
     weight: 0,
-    mega: "charizard-mega-y",
-    megaStone: "リザードナイトY",
+    megas: [
+      { key: "x", id: "charizard-mega-x", label: "メガ X", stone: "リザードナイトX" },
+      { key: "y", id: "charizard-mega-y", label: "メガ Y", stone: "リザードナイトY" },
+    ],
   },
   {
     id: "charizard-mega-x",

@@ -26,5 +26,6 @@ export function makePokemon(
     boosts: opts.boosts,
     status: opts.status,
     mega: opts.mega,
+    megaKey: opts.megaKey,
   };
 }

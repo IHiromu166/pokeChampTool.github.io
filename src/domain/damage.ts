@@ -51,13 +51,22 @@ export interface DamageResult {
   typeEffectiveness: number;
 }
 
+function resolveMegaFormId(base: PokemonSpecies, inst: PokemonInstance): string | undefined {
+  if (!inst.mega) return undefined;
+  if (base.megas && base.megas.length > 0) {
+    const chosen = inst.megaKey
+      ? base.megas.find((m) => m.key === inst.megaKey)
+      : base.megas[0];
+    return chosen?.id;
+  }
+  return base.mega;
+}
+
 export function resolveSpecies(instance: PokemonInstance): PokemonSpecies {
   const base = POKEMON_BY_ID[instance.speciesId];
   if (!base) throw new Error(`unknown species: ${instance.speciesId}`);
-  if (instance.mega && base.mega) {
-    return POKEMON_BY_ID[base.mega] ?? base;
-  }
-  return base;
+  const megaId = resolveMegaFormId(base, instance);
+  return megaId ? (POKEMON_BY_ID[megaId] ?? base) : base;
 }
 
 function resolveAbility(instance: PokemonInstance): string {
