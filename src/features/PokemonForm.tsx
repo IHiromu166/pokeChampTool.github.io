@@ -34,6 +34,18 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
     }
   }, [value]);
   const baseSpecies = POKEMON_BY_ID[value.speciesId] ?? POKEMON[0];
+  const megaOptions =
+    baseSpecies.megas ??
+    (baseSpecies.mega
+      ? [
+          {
+            key: "_single",
+            id: baseSpecies.mega,
+            label: "メガシンカ",
+            stone: baseSpecies.megaStone,
+          },
+        ]
+      : []);
   const nature = NATURE_BY_ID[value.natureId] ?? NATURE_BY_ID["まじめ"];
   const selectablePokemon = useMemo(
     () => POKEMON.filter((p) => !p.id.includes("-mega")),
@@ -61,6 +73,7 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
       speciesId: hit.id,
       ability: hit.abilities[0] ?? "",
       mega: false,
+      megaKey: undefined,
     });
     setNameQuery(hit.name);
   };
@@ -83,15 +96,37 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
     <div className="panel space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-sm text-gray-400">{title}</span>
-        {baseSpecies.mega && (
+        {megaOptions.length === 1 && (
           <label className="ml-auto inline-flex items-center gap-1 text-xs">
             <input
               type="checkbox"
               checked={!!value.mega}
-              onChange={(e) => update({ mega: e.target.checked })}
+              onChange={(e) =>
+                update({ mega: e.target.checked, megaKey: undefined })
+              }
             />
-            メガシンカ
+            {megaOptions[0].label}
           </label>
+        )}
+        {megaOptions.length >= 2 && (
+          <div className="ml-auto inline-flex items-center gap-2 text-xs">
+            {megaOptions.map((opt) => (
+              <label key={opt.key} className="inline-flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={!!value.mega && value.megaKey === opt.key}
+                  onChange={(e) =>
+                    update(
+                      e.target.checked
+                        ? { mega: true, megaKey: opt.key }
+                        : { mega: false, megaKey: undefined },
+                    )
+                  }
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
         )}
       </div>
 

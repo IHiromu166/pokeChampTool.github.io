@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calcDamage } from "@/domain/damage";
+import { calcDamage, resolveSpecies } from "@/domain/damage";
 import { makeAps, makePokemon } from "@/domain/factory";
 import { MOVE_BY_ID } from "@/data/moves";
 
@@ -73,7 +73,8 @@ describe("damage", () => {
       natureId: "ひかえめ",
       ability: "ひでり",
       aps: makeAps({ spa: 32 }),
-      mega: true, // mega-y
+      mega: true,
+      megaKey: "y",
     });
     const def = makePokemon("ferrothorn", {
       natureId: "わんぱく",
@@ -95,6 +96,18 @@ describe("damage", () => {
     expect(sunny.guaranteedKoTurns).toBe(1);
     expect(sunny.max).toBeGreaterThan(noSun.max);
     expect(sunny.typeEffectiveness).toBe(4);
+  });
+
+  it("メガリザードンX：megaKey='x' で atk 130 / ドラゴン複合に解決される", () => {
+    const atk = makePokemon("charizard", {
+      mega: true,
+      megaKey: "x",
+      ability: "かたいツメ",
+    });
+    const sp = resolveSpecies(atk);
+    expect(sp.id).toBe("charizard-mega-x");
+    expect(sp.baseStats.atk).toBe(130);
+    expect(sp.types).toContain("ドラゴン");
   });
 
   it("壁（リフレクター）で物理ダメージ半減", () => {

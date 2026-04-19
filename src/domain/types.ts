@@ -50,6 +50,8 @@ export interface PokemonSpecies {
   mega?: string;
   /** メガシンカに必要な持ち物（メガストーン名） */
   megaStone?: string;
+  /** 複数メガシンカがある種族用。設定時は mega/megaStone より優先。 */
+  megas?: Array<{ key: string; id: string; label: string; stone?: string }>;
   weight: number;
 }
 
@@ -95,6 +97,8 @@ export interface PokemonInstance {
   status?: "やけど" | "なし";
   /** メガシンカを発動した状態として扱う */
   mega?: boolean;
+  /** megas を持つ種族で、どの形態を選んでいるか (例: "x" | "y")。 */
+  megaKey?: string;
 }
 
 export interface FieldState {
