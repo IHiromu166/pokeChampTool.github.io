@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MOVES, MOVE_BY_ID } from "@/data/moves";
+import { MOVE_BY_ID } from "@/data/moves";
 import { tuneBulk, type Threat } from "@/domain/bulk-tuning";
 import { calcDamage } from "@/domain/damage";
 import { PokemonForm } from "@/features/PokemonForm";
+import { getAttackerMoveOptions } from "@/features/moveOptions";
 import { defaultAttacker, defaultDefender, defaultField } from "@/features/defaults";
 import type { PokemonInstance } from "@/domain/types";
 
@@ -142,7 +143,7 @@ export default function BulkPage() {
                           )
                         }
                       >
-                        {MOVES.filter((m) => m.category !== "変化").map((m) => (
+                        {getAttackerMoveOptions(t.attacker.speciesId, t.moveId).map((m) => (
                           <option key={m.id} value={m.id}>
                             {m.name}
                           </option>
