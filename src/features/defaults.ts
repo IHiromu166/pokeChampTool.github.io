@@ -6,7 +6,7 @@ export function defaultAttacker(): PokemonInstance {
     natureId: "ようき",
     ability: "さめはだ",
     item: "なし",
-    aps: makeAps({ atk: 32, spe: 32 }),
+    aps: makeAps({}),
   });
 }
 
@@ -15,7 +15,7 @@ export function defaultDefender(): PokemonInstance {
     natureId: "わんぱく",
     ability: "テクニシャン",
     item: "なし",
-    aps: makeAps({ hp: 32, def: 32 }),
+    aps: makeAps({}),
   });
 }
 
