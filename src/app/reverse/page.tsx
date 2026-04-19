@@ -162,6 +162,8 @@ export default function ReversePage() {
                     <th>{defStat === "def" ? "B" : "D"}能力P</th>
                     <th>HP実数値</th>
                     <th>{defStat === "def" ? "B" : "D"}実数値</th>
+                    <th>性格</th>
+                    <th>持ち物</th>
                     <th>一致率</th>
                   </tr>
                 </thead>
@@ -172,6 +174,8 @@ export default function ReversePage() {
                       <td>{c.defAp}</td>
                       <td>{c.hpStat}</td>
                       <td>{c.defStat}</td>
+                      <td>{c.natureLabel}({c.natureId})</td>
+                      <td>{c.itemId}</td>
                       <td>{(c.matchRate * 100).toFixed(0)}%</td>
                     </tr>
                   ))}
@@ -186,6 +190,8 @@ export default function ReversePage() {
                 <tr>
                   <th className="py-1">{offenseStat === "atk" ? "A" : "C"}能力P</th>
                   <th>{offenseStat === "atk" ? "A" : "C"}実数値</th>
+                  <th>性格</th>
+                  <th>持ち物</th>
                   <th>一致率</th>
                 </tr>
               </thead>
@@ -194,6 +200,8 @@ export default function ReversePage() {
                   <tr key={i} className="border-t border-slate-200 tabular-nums">
                     <td className="py-1">{c.atkAp}</td>
                     <td>{c.attackStat}</td>
+                    <td>{c.natureLabel}({c.natureId})</td>
+                    <td>{c.itemId}</td>
                     <td>{(c.matchRate * 100).toFixed(0)}%</td>
                   </tr>
                 ))}
