@@ -212,19 +212,19 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
         <div className="space-y-1">
           {(["hp", "atk", "def", "spa", "spd", "spe"] as const).map((k) => (
             <div key={k} className="flex items-center gap-2 text-sm">
-              <span className="w-4 text-gray-400">{STAT_LABEL[k]}</span>
+              <span className="w-4 shrink-0 text-gray-400">{STAT_LABEL[k]}</span>
               <input
                 type="range"
                 min={0}
                 max={32}
                 step={1}
-                className="flex-1"
+                className="flex-1 min-w-0"
                 value={value.aps[k]}
                 onChange={(e) => updateAp(k, Number(e.target.value))}
               />
               <button
                 type="button"
-                className="input w-7 px-0 text-center"
+                className="input w-7 shrink-0 px-0 text-center"
                 aria-label={`${STAT_LABEL[k]} を 1 減らす`}
                 onClick={() => updateAp(k, value.aps[k] - 1)}
                 disabled={value.aps[k] <= 0}
@@ -236,20 +236,20 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
                 min={0}
                 max={32}
                 step={1}
-                className="input w-14"
+                className="input w-10 sm:w-14 shrink-0"
                 value={value.aps[k]}
                 onChange={(e) => updateAp(k, Number(e.target.value))}
               />
               <button
                 type="button"
-                className="input w-7 px-0 text-center"
+                className="input w-7 shrink-0 px-0 text-center"
                 aria-label={`${STAT_LABEL[k]} を 1 増やす`}
                 onClick={() => updateAp(k, value.aps[k] + 1)}
                 disabled={value.aps[k] >= 32 || sumStats(value.aps) >= 66}
               >
                 +
               </button>
-              <span className="w-12 text-right tabular-nums">{stats[k]}</span>
+              <span className="w-10 sm:w-12 shrink-0 text-right tabular-nums">{stats[k]}</span>
             </div>
           ))}
         </div>
