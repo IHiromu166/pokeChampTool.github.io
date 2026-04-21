@@ -11,3 +11,4 @@ coverage
 .vitest-cache
 next-env.d.ts
 scripts/cache/
+*.tsbuildinfo
