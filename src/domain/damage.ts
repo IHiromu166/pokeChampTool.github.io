@@ -135,8 +135,14 @@ export function calcDamage(input: DamageInput): DamageResult {
     A = A * 2;
   }
 
+  // テクニシャン：威力60以下の技を1.5倍
+  const movePower =
+    atkAbility === "テクニシャン" && move.power <= 60
+      ? move.power * 1.5
+      : move.power;
+
   // ── ベースダメージ（レベル50固定） ──
-  let base = Math.floor(Math.floor(22 * move.power * A / D) / 50) + 2;
+  let base = Math.floor(Math.floor(22 * movePower * A / D) / 50) + 2;
 
   // ── 補正 ──
   const modifiers: number[] = [];

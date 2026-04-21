@@ -135,6 +135,34 @@ describe("damage", () => {
     expect(wall.max).toBe(Math.floor(noWall.max * 0.5));
   });
 
+  it("テクニシャン：威力60以下の技を1.5倍補正する", () => {
+    const atk = makePokemon("scizor", {
+      natureId: "いじっぱり",
+      ability: "テクニシャン",
+      aps: makeAps({ atk: 32 }),
+    });
+    const def = makePokemon("garchomp", {
+      natureId: "ようき",
+      ability: "さめはだ",
+      aps: makeAps({}),
+    });
+    const withTech = calcDamage({
+      attacker: atk,
+      defender: def,
+      move: MOVE_BY_ID["バレットパンチ"], // 威力40
+      field: { weather: "なし", terrain: "なし" },
+    });
+    const withoutTech = calcDamage({
+      attacker: { ...atk, ability: "むしのしらせ" },
+      defender: def,
+      move: MOVE_BY_ID["バレットパンチ"],
+      field: { weather: "なし", terrain: "なし" },
+    });
+    // テクニシャンありのダメージが無しより大きく、1.5倍相当になること
+    expect(withTech.max).toBeGreaterThan(withoutTech.max);
+    expect(withTech.max / withoutTech.max).toBeGreaterThan(1.4);
+  });
+
   it("変化技は 0 ダメージ", () => {
     const r = calcDamage({
       attacker: makePokemon("garchomp"),
