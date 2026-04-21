@@ -22,6 +22,11 @@ export default function CalcPage() {
     setMoveOverride({});
   };
 
+  const swapSides = () => {
+    setAttacker(defender);
+    setDefender(attacker);
+  };
+
   const result = useMemo(() => {
     const base = MOVE_BY_ID[moveId];
     if (!base) return null;
@@ -31,7 +36,19 @@ export default function CalcPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">ダメージ計算</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-lg font-semibold">ダメージ計算</h1>
+        <button
+          type="button"
+          className="btn-ghost inline-flex items-center gap-1"
+          onClick={swapSides}
+          aria-label="攻撃側と防御側を入れ替える"
+          title="攻撃側と防御側を入れ替える"
+        >
+          <span aria-hidden="true">⇄</span>
+          <span>攻撃/防御を入れ替え</span>
+        </button>
+      </div>
       <div className="grid lg:grid-cols-3 gap-4">
         <PokemonForm
           title="攻撃側"
