@@ -7,7 +7,8 @@ import type { PokemonInstance, Stats } from "@/domain/types";
 import { resolveSpecies } from "@/domain/damage";
 import { buildActualStats } from "@/domain/stats";
 import { NATURE_BY_ID } from "@/data/natures";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { PokemonNameCombobox } from "@/features/PokemonNameCombobox";
 
 const STAT_LABEL: Record<keyof Stats, string> = {
   hp: "H",
@@ -51,35 +52,6 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
     () => POKEMON.filter((p) => !p.id.includes("-mega")),
     [],
   );
-  const [nameQuery, setNameQuery] = useState(baseSpecies.name);
-  useEffect(() => {
-    setNameQuery(baseSpecies.name);
-  }, [baseSpecies.name]);
-  const nameMatches = useMemo(() => {
-    const q = normalizeName(nameQuery);
-    if (!q) return selectablePokemon;
-    return selectablePokemon.filter((p) => normalizeName(p.name).includes(q));
-  }, [nameQuery, selectablePokemon]);
-  const commitName = (raw: string) => {
-    const q = raw.trim();
-    if (!q) return;
-    const nq = normalizeName(q);
-    const exact =
-      selectablePokemon.find((p) => p.name === q) ??
-      selectablePokemon.find((p) => normalizeName(p.name) === nq);
-    const hit = exact ?? selectablePokemon.find((p) => normalizeName(p.name).includes(nq));
-    if (!hit || hit.id === value.speciesId) {
-      setNameQuery(baseSpecies.name);
-      return;
-    }
-    update({
-      speciesId: hit.id,
-      ability: hit.abilities[0] ?? "",
-      mega: false,
-      megaKey: undefined,
-    });
-    setNameQuery(hit.name);
-  };
   const stats = useMemo(
     () => buildActualStats(species.baseStats, value.aps, nature),
     [species, value, nature],
@@ -134,29 +106,23 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <label className="space-y-1">
+        <div className="space-y-1">
           <div className="label">ポケモン</div>
-          <input
-            type="text"
-            className="input"
-            list={`pokemon-list-${side}`}
-            value={nameQuery}
+          <PokemonNameCombobox
+            value={baseSpecies.name}
+            options={selectablePokemon}
             placeholder="名前で検索"
-            onChange={(e) => setNameQuery(hiraganaToKatakana(e.target.value))}
-            onBlur={(e) => commitName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                commitName((e.target as HTMLInputElement).value);
-              }
-            }}
+            inputId={`pokemon-name-${side}`}
+            onSelect={(hit) =>
+              update({
+                speciesId: hit.id,
+                ability: hit.abilities[0] ?? "",
+                mega: false,
+                megaKey: undefined,
+              })
+            }
           />
-          <datalist id={`pokemon-list-${side}`}>
-            {nameMatches.map((p) => (
-              <option key={p.id} value={p.name} />
-            ))}
-          </datalist>
-        </label>
+        </div>
         <label className="space-y-1">
           <div className="label">特性</div>
           <select
@@ -331,12 +297,4 @@ function clampBoost(n: number): number {
 }
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
-}
-function normalizeName(s: string): string {
-  return hiraganaToKatakana(s.trim().toLowerCase());
-}
-function hiraganaToKatakana(s: string): string {
-  return s.replace(/[\u3041-\u3096]/g, (ch) =>
-    String.fromCharCode(ch.charCodeAt(0) + 0x60),
-  );
 }
