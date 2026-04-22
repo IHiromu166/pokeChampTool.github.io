@@ -13,28 +13,26 @@ import {
 import { PokemonForm } from "@/features/PokemonForm";
 import { FieldForm } from "@/features/FieldForm";
 import { MovePicker } from "@/features/MovePicker";
-import { resolveMove, type MoveOverride } from "@/features/moveOverride";
-import { defaultAttacker, defaultDefender, defaultField } from "@/features/defaults";
+import { resolveMove } from "@/features/moveOverride";
+import { useSharedCalc } from "@/store/shared";
 
 type SelfSide = "atk" | "def";
 
 export default function ReversePage() {
-  const [selfSide, setSelfSide] = useState<SelfSide>("atk");
-  const [attacker, setAttacker] = useState(defaultAttacker);
-  const [defender, setDefender] = useState(defaultDefender);
-  const [field, setField] = useState(defaultField);
-  const [moveId, setMoveId] = useState("じしん");
-  const [moveOverride, setMoveOverride] = useState<MoveOverride>({});
+  const {
+    attacker, setAttacker,
+    defender, setDefender,
+    field, setField,
+    moveId, setMoveId,
+    moveOverride, setMoveOverride,
+  } = useSharedCalc();
 
+  const [selfSide, setSelfSide] = useState<SelfSide>("atk");
   const [observedRemainingPct, setObservedRemainingPct] = useState(63);
   const [observedRemainingHp, setObservedRemainingHp] = useState(100);
   const [defStat, setDefStat] = useState<"def" | "spd">("def");
   const [offenseStat, setOffenseStat] = useState<"atk" | "spa">("atk");
 
-  const selectMove = (id: string) => {
-    setMoveId(id);
-    setMoveOverride({});
-  };
 
   const baseMove = MOVE_BY_ID[moveId];
   const move = baseMove ? resolveMove(baseMove, moveOverride) : undefined;
@@ -99,7 +97,7 @@ export default function ReversePage() {
         <div className="space-y-4">
           <MovePicker
             value={moveId}
-            onChange={selectMove}
+            onChange={setMoveId}
             override={moveOverride}
             onOverrideChange={setMoveOverride}
             attackerSpeciesId={attacker.speciesId}
