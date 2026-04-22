@@ -13,6 +13,7 @@ const NAV = [
   { href: "/calc", label: "ダメージ計算" },
   { href: "/reverse", label: "逆引き" },
   { href: "/bulk", label: "ステータス調整" },
+  { href: "/double", label: "ダブルバトル" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
