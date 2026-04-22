@@ -1,31 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { calcDamage } from "@/domain/damage";
 import { MOVE_BY_ID } from "@/data/moves";
 import { PokemonForm } from "@/features/PokemonForm";
 import { FieldForm } from "@/features/FieldForm";
 import { MovePicker } from "@/features/MovePicker";
-import { resolveMove, type MoveOverride } from "@/features/moveOverride";
+import { resolveMove } from "@/features/moveOverride";
 import { DamageResultView } from "@/features/DamageResult";
-import { defaultAttacker, defaultDefender, defaultField } from "@/features/defaults";
+import { useSharedCalc } from "@/store/shared";
 
 export default function CalcPage() {
-  const [attacker, setAttacker] = useState(defaultAttacker);
-  const [defender, setDefender] = useState(defaultDefender);
-  const [field, setField] = useState(defaultField);
-  const [moveId, setMoveId] = useState("じしん");
-  const [moveOverride, setMoveOverride] = useState<MoveOverride>({});
-
-  const selectMove = (id: string) => {
-    setMoveId(id);
-    setMoveOverride({});
-  };
-
-  const swapSides = () => {
-    setAttacker(defender);
-    setDefender(attacker);
-  };
+  const {
+    attacker, setAttacker,
+    defender, setDefender,
+    field, setField,
+    moveId, setMoveId,
+    moveOverride, setMoveOverride,
+    swapSides,
+  } = useSharedCalc();
 
   const result = useMemo(() => {
     const base = MOVE_BY_ID[moveId];
@@ -65,7 +58,7 @@ export default function CalcPage() {
         <div className="space-y-4">
           <MovePicker
             value={moveId}
-            onChange={selectMove}
+            onChange={setMoveId}
             override={moveOverride}
             onOverrideChange={setMoveOverride}
             attackerSpeciesId={attacker.speciesId}
