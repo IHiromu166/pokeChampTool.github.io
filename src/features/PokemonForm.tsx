@@ -24,9 +24,10 @@ interface Props {
   value: PokemonInstance;
   onChange: (next: PokemonInstance) => void;
   side: "atk" | "def";
+  inputIdSuffix?: string;
 }
 
-export function PokemonForm({ title, value, onChange, side }: Props) {
+export function PokemonForm({ title, value, onChange, side, inputIdSuffix }: Props) {
   const species = useMemo(() => {
     try {
       return resolveSpecies(value);
@@ -112,7 +113,7 @@ export function PokemonForm({ title, value, onChange, side }: Props) {
             value={baseSpecies.name}
             options={selectablePokemon}
             placeholder="名前で検索"
-            inputId={`pokemon-name-${side}`}
+            inputId={`pokemon-name-${side}${inputIdSuffix ? `-${inputIdSuffix}` : ""}`}
             onSelect={(hit) =>
               update({
                 speciesId: hit.id,
