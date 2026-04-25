@@ -191,6 +191,14 @@ export default function BulkPage() {
                           )
                         }
                         side="atk"
+                        inputIdSuffix={t.id}
+                        onSelectMove={(id) =>
+                          setThreats(
+                            threats.map((x) =>
+                              x.id === t.id ? { ...x, moveId: id, moveOverride: {} } : x,
+                            ),
+                          )
+                        }
                       />
                       <div className="space-y-2">
                         <MovePicker
@@ -316,6 +324,7 @@ export default function BulkPage() {
               value={reqAttacker}
               onChange={setReqAttacker}
               side="atk"
+              onSelectMove={selectReqMove}
             />
             <PokemonForm
               title="防御側 (相手)"

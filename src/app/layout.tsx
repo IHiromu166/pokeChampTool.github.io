@@ -14,6 +14,7 @@ const NAV = [
   { href: "/reverse", label: "逆引き" },
   { href: "/bulk", label: "ステータス調整" },
   { href: "/double", label: "ダブルバトル" },
+  { href: "/party", label: "マイパーティ" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

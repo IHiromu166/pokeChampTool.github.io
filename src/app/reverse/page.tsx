@@ -87,6 +87,7 @@ export default function ReversePage() {
           value={attacker}
           onChange={setAttacker}
           side="atk"
+          onSelectMove={setMoveId}
         />
         <PokemonForm
           title={selfSide === "def" ? "防御側 (自分)" : "防御側 (相手)"}

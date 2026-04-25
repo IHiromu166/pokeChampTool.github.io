@@ -1,14 +1,16 @@
 "use client";
 
 import { POKEMON, POKEMON_BY_ID } from "@/data/pokemon";
+import { MOVE_BY_ID } from "@/data/moves";
 import { NATURES } from "@/data/natures";
 import { ITEMS } from "@/data/items";
 import type { PokemonInstance, Stats } from "@/domain/types";
 import { resolveSpecies } from "@/domain/damage";
 import { buildActualStats } from "@/domain/stats";
 import { NATURE_BY_ID } from "@/data/natures";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PokemonNameCombobox } from "@/features/PokemonNameCombobox";
+import { useParties } from "@/store/party";
 
 const STAT_LABEL: Record<keyof Stats, string> = {
   hp: "H",
@@ -25,9 +27,11 @@ interface Props {
   onChange: (next: PokemonInstance) => void;
   side: "atk" | "def";
   inputIdSuffix?: string;
+  /** 攻撃側で技ボタンを押されたときに呼ばれる。未指定なら技ボタンは非表示。 */
+  onSelectMove?: (moveId: string) => void;
 }
 
-export function PokemonForm({ title, value, onChange, side, inputIdSuffix }: Props) {
+export function PokemonForm({ title, value, onChange, side, inputIdSuffix, onSelectMove }: Props) {
   const species = useMemo(() => {
     try {
       return resolveSpecies(value);
@@ -72,6 +76,11 @@ export function PokemonForm({ title, value, onChange, side, inputIdSuffix }: Pro
     <div className="panel space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-sm text-gray-400">{title}</span>
+        <PartyLoader
+          onLoadPokemon={(p) => onChange(p)}
+          onSelectMove={onSelectMove}
+          inputIdSuffix={inputIdSuffix ? `${side}-${inputIdSuffix}` : side}
+        />
         {megaOptions.length === 1 && (
           <label className="ml-auto inline-flex items-center gap-1 text-xs">
             <input
@@ -298,4 +307,125 @@ function clampBoost(n: number): number {
 }
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
+}
+
+interface PartyLoaderProps {
+  onLoadPokemon: (p: PokemonInstance) => void;
+  onSelectMove?: (moveId: string) => void;
+  inputIdSuffix: string;
+}
+
+function PartyLoader({ onLoadPokemon, onSelectMove, inputIdSuffix }: PartyLoaderProps) {
+  const parties = useParties((s) => s.parties);
+  const [open, setOpen] = useState(false);
+  const [selectedPartyId, setSelectedPartyId] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedPartyId && parties[0]) setSelectedPartyId(parties[0].id);
+    if (selectedPartyId && !parties.some((p) => p.id === selectedPartyId)) {
+      setSelectedPartyId(parties[0]?.id ?? "");
+    }
+  }, [parties, selectedPartyId]);
+
+  const selected = parties.find((p) => p.id === selectedPartyId);
+
+  return (
+    <div className="relative text-xs">
+      <button
+        type="button"
+        className="input px-2 py-1 text-xs"
+        onClick={() => setOpen((v) => !v)}
+        disabled={!mounted}
+        aria-expanded={open}
+      >
+        パーティから読込 {open ? "▲" : "▼"}
+      </button>
+      {open && (
+        <div className="absolute left-0 z-10 mt-1 w-72 rounded border border-slate-300 bg-white p-2 shadow-lg">
+          {parties.length === 0 ? (
+            <div className="text-gray-500">
+              保存済みパーティがありません。
+              <a href="/party" className="text-blue-600 underline">
+                /party
+              </a>
+              で作成してください。
+            </div>
+          ) : (
+            <>
+              <label className="block space-y-1">
+                <span className="label">パーティ</span>
+                <select
+                  className="input w-full"
+                  value={selectedPartyId}
+                  onChange={(e) => setSelectedPartyId(e.target.value)}
+                  id={`party-loader-${inputIdSuffix}`}
+                >
+                  {parties.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="mt-2 space-y-1">
+                {selected?.members.map((m, i) => {
+                  const species = POKEMON_BY_ID[m.pokemon.speciesId];
+                  return (
+                    <div
+                      key={i}
+                      className="flex flex-wrap items-center gap-1 border-t border-slate-100 pt-1"
+                    >
+                      <span className="w-10 shrink-0 text-gray-500">#{i + 1}</span>
+                      <span className="flex-1 truncate">{species?.name ?? m.pokemon.speciesId}</span>
+                      <button
+                        type="button"
+                        className="input px-2 py-0.5 text-xs"
+                        onClick={() => {
+                          onLoadPokemon(m.pokemon);
+                          setOpen(false);
+                        }}
+                      >
+                        読込
+                      </button>
+                      {onSelectMove && m.moves.filter(Boolean).length > 0 && (
+                        <div className="flex w-full flex-wrap gap-1 pl-10">
+                          {m.moves.filter(Boolean).map((mv, j) => (
+                            <button
+                              key={`${mv}-${j}`}
+                              type="button"
+                              className="input px-2 py-0.5 text-xs"
+                              onClick={() => {
+                                onSelectMove(mv);
+                                setOpen(false);
+                              }}
+                            >
+                              {MOVE_BY_ID[mv]?.name ?? mv}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+          <div className="mt-2 text-right">
+            <button
+              type="button"
+              className="text-xs text-gray-500 underline"
+              onClick={() => setOpen(false)}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

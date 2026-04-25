@@ -48,6 +48,7 @@ export default function CalcPage() {
           value={attacker}
           onChange={setAttacker}
           side="atk"
+          onSelectMove={setMoveId}
         />
         <PokemonForm
           title="防御側"

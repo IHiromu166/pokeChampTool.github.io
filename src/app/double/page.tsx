@@ -66,6 +66,7 @@ export default function DoublePage() {
             onChange={setAttacker1}
             side="atk"
             inputIdSuffix="1"
+            onSelectMove={selectMove1}
           />
           <MovePicker
             value={moveId1}
@@ -83,6 +84,7 @@ export default function DoublePage() {
             onChange={setAttacker2}
             side="atk"
             inputIdSuffix="2"
+            onSelectMove={selectMove2}
           />
           <MovePicker
             value={moveId2}
