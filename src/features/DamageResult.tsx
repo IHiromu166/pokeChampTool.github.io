@@ -2,6 +2,8 @@
 
 import type { DamageResult } from "@/domain/damage";
 
+const MAX_SHOWN_TURNS = 4;
+
 interface Props {
   result: DamageResult;
 }
@@ -15,7 +17,7 @@ export function DamageResultView({ result }: Props) {
     );
   }
   const pct = (n: number) => ((n / result.defenderHp) * 100).toFixed(1);
-  const koLabel = describeKo(result);
+  const ko = describeKo(result);
   return (
     <div className="panel space-y-3">
       <div>
@@ -34,8 +36,11 @@ export function DamageResultView({ result }: Props) {
 
       <div>
         <div className="label mb-1">確定数</div>
-        <div className="text-lg">
-          <span className={koColorClass(result)}>{koLabel}</span>
+        <div className="text-lg space-y-0.5">
+          <div className={ko.primaryColor}>{ko.primary}</div>
+          {ko.secondary && (
+            <div className="text-sm text-gray-500">{ko.secondary}</div>
+          )}
         </div>
       </div>
 
@@ -65,20 +70,41 @@ export function DamageResultView({ result }: Props) {
   );
 }
 
-function describeKo(r: DamageResult): string {
-  if (r.oneShotRate >= 1) return "確定1発";
-  if (r.oneShotRate > 0) {
-    return `乱数1発 (${(r.oneShotRate * 100).toFixed(2)}%)`;
-  }
-  if (r.guaranteedKoTurns) {
-    return `確定${r.guaranteedKoTurns}発`;
-  }
-  return "倒せない";
+interface KoLabel {
+  primary: string;
+  primaryColor: string;
+  secondary?: string;
 }
 
-function koColorClass(r: DamageResult): string {
-  if (r.oneShotRate >= 1) return "text-green-600";
-  if (r.oneShotRate > 0) return "text-amber-600";
-  if (r.guaranteedKoTurns && r.guaranteedKoTurns <= 2) return "text-amber-600";
-  return "text-gray-500";
+function describeKo(r: DamageResult): KoLabel {
+  const { possibleKoTurns, possibleKoRate, guaranteedKoTurns } = r;
+
+  if (possibleKoTurns === null || possibleKoTurns > MAX_SHOWN_TURNS) {
+    return { primary: "倒せない", primaryColor: "text-gray-500" };
+  }
+
+  // 全乱数でKO確定
+  if (possibleKoRate >= 1) {
+    const color =
+      possibleKoTurns === 1
+        ? "text-green-600"
+        : possibleKoTurns <= 2
+          ? "text-amber-600"
+          : "text-gray-500";
+    return { primary: `確定${possibleKoTurns}発`, primaryColor: color };
+  }
+
+  // 乱数次第でKO可能
+  const ratePct = (possibleKoRate * 100).toFixed(2);
+  const primary = `乱数${possibleKoTurns}発 (${ratePct}%)`;
+  const primaryColor = possibleKoTurns === 1 ? "text-amber-600" : "text-orange-500";
+
+  let secondary: string | undefined;
+  if (guaranteedKoTurns !== null && guaranteedKoTurns <= MAX_SHOWN_TURNS) {
+    secondary = `確定${guaranteedKoTurns}発`;
+  } else if (guaranteedKoTurns !== null) {
+    secondary = `確定${guaranteedKoTurns}発`;
+  }
+
+  return { primary, primaryColor, secondary };
 }

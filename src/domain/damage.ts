@@ -41,6 +41,10 @@ export interface DamageResult {
   oneShotRate: number;
   /** 1=確定1発, 2=確定2発 など。乱数1発の場合は 1 */
   guaranteedKoTurns: number | null;
+  /** KO が最初に可能になる発数（max*n >= hp を満たす最小 n）。null = 永久に倒せない */
+  possibleKoTurns: number | null;
+  /** possibleKoTurns 発で実際に KO できる確率（0〜1） */
+  possibleKoRate: number;
   /** 各ダメージ% */
   percents: number[];
   /** 攻撃側で使った A or C 実数値（逆引きで使用） */
@@ -208,6 +212,10 @@ export function calcDamage(input: DamageInput): DamageResult {
   const defenderHp = defStats.hp;
   const oneShotRate = rolls.filter((d) => d >= defenderHp).length / rolls.length;
   const guaranteedKoTurns = computeGuaranteedKo(min, defenderHp);
+  const possibleKoTurns = max > 0 ? Math.ceil(defenderHp / max) : null;
+  const possibleKoRate = possibleKoTurns !== null
+    ? nHitKoRate(rolls, defenderHp, possibleKoTurns)
+    : 0;
   const percents = rolls.map((d) => (d / defenderHp) * 100);
 
   return {
@@ -217,11 +225,36 @@ export function calcDamage(input: DamageInput): DamageResult {
     defenderHp,
     oneShotRate,
     guaranteedKoTurns,
+    possibleKoTurns,
+    possibleKoRate,
     percents,
     attackStat: A,
     defenseStat: D,
     typeEffectiveness: typeEff,
   };
+}
+
+/** N 回攻撃が命中した場合に合計ダメージが hp 以上になる確率（DP で算出） */
+function nHitKoRate(rolls: number[], hp: number, n: number): number {
+  if (n <= 0) return 0;
+  let dp = new Map<number, number>();
+  dp.set(0, 1);
+  for (let i = 0; i < n; i++) {
+    const next = new Map<number, number>();
+    for (const [dmg, cnt] of dp) {
+      for (const roll of rolls) {
+        const key = dmg + roll;
+        next.set(key, (next.get(key) ?? 0) + cnt);
+      }
+    }
+    dp = next;
+  }
+  const total = Math.pow(16, n);
+  let success = 0;
+  for (const [dmg, cnt] of dp) {
+    if (dmg >= hp) success += cnt;
+  }
+  return success / total;
 }
 
 function computeGuaranteedKo(minDamage: number, hp: number): number | null {
@@ -237,6 +270,8 @@ function zeroResult(): DamageResult {
     defenderHp: 0,
     oneShotRate: 0,
     guaranteedKoTurns: null,
+    possibleKoTurns: null,
+    possibleKoRate: 0,
     percents: Array(16).fill(0),
     attackStat: 0,
     defenseStat: 0,
