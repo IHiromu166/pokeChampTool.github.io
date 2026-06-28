@@ -2,15 +2,28 @@
 
 import { POKEMON, POKEMON_BY_ID } from "@/data/pokemon";
 import { MOVE_BY_ID } from "@/data/moves";
-import { NATURES } from "@/data/natures";
 import { ITEMS } from "@/data/items";
-import type { PokemonInstance, Stats } from "@/domain/types";
+import type { Nature, PokemonInstance, Stats } from "@/domain/types";
 import { resolveSpecies } from "@/domain/damage";
 import { buildActualStats } from "@/domain/stats";
 import { NATURE_BY_ID } from "@/data/natures";
 import { useEffect, useMemo, useState } from "react";
 import { PokemonNameCombobox } from "@/features/PokemonNameCombobox";
 import { useParties } from "@/store/party";
+
+const NATURE_REP_FORM = {
+  atk: { plus: "いじっぱり", neutral: "がんばりや", minus: "ずぶとい" },
+  def: { plus: "わんぱく",   neutral: "がんばりや", minus: "おっとり" },
+  spa: { plus: "ひかえめ",   neutral: "がんばりや", minus: "いじっぱり" },
+  spd: { plus: "しんちょう", neutral: "がんばりや", minus: "うっかりや" },
+  spe: { plus: "ようき",     neutral: "がんばりや", minus: "なまいき" },
+} as const;
+
+function getNatureDir(nature: Nature | undefined, stat: keyof typeof NATURE_REP_FORM): "plus" | "neutral" | "minus" {
+  if (nature?.plus === stat) return "plus";
+  if (nature?.minus === stat) return "minus";
+  return "neutral";
+}
 
 const STAT_LABEL: Record<keyof Stats, string> = {
   hp: "H",
@@ -148,25 +161,33 @@ export function PokemonForm({ title, value, onChange, side, inputIdSuffix, onSel
             ))}
           </select>
         </label>
-        <label className="space-y-1">
-          <div className="label">性格</div>
-          <select
-            className="input"
-            value={value.natureId}
-            onChange={(e) => update({ natureId: e.target.value })}
-          >
-            {NATURES.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.name}
-                {n.plus && n.minus
-                  ? ` (+${STAT_LABEL[n.plus as keyof Stats]} -${
-                      STAT_LABEL[n.minus as keyof Stats]
-                    })`
-                  : ""}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="col-span-2 space-y-1">
+          <div className="label">性格補正</div>
+          <div className="flex gap-3 flex-wrap">
+            {(["atk", "def", "spa", "spd", "spe"] as const).map((k) => {
+              const dir = getNatureDir(nature, k);
+              return (
+                <div key={k} className="flex flex-col items-center gap-0.5">
+                  <span className="text-xs text-gray-400">{STAT_LABEL[k]}</span>
+                  <div className="flex">
+                    {(["plus", "neutral", "minus"] as const).map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        className={`input px-1.5 py-0.5 text-xs first:rounded-r-none last:rounded-l-none [&:not(:first-child):not(:last-child)]:rounded-none ${
+                          dir === d ? "bg-blue-500 text-white border-blue-500" : ""
+                        }`}
+                        onClick={() => update({ natureId: NATURE_REP_FORM[k][d] })}
+                      >
+                        {d === "plus" ? "+" : d === "neutral" ? "0" : "−"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
         <label className="space-y-1">
           <div className="label">持ち物</div>
           <select
