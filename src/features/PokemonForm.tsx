@@ -3,11 +3,11 @@
 import { POKEMON, POKEMON_BY_ID } from "@/data/pokemon";
 import { MOVE_BY_ID } from "@/data/moves";
 import { ITEMS } from "@/data/items";
-import type { Nature, PokemonInstance, Stats } from "@/domain/types";
+import type { PokemonInstance, Stats } from "@/domain/types";
 import { resolveSpecies } from "@/domain/damage";
 import { buildActualStats } from "@/domain/stats";
-import { NATURE_BY_ID } from "@/data/natures";
-import { useEffect, useMemo, useState } from "react";
+import { NATURE_BY_ID, NATURES } from "@/data/natures";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PokemonNameCombobox } from "@/features/PokemonNameCombobox";
 import { useParties } from "@/store/party";
 
@@ -19,10 +19,15 @@ const NATURE_REP_FORM = {
   spe: { plus: "ようき",     neutral: "がんばりや", minus: "なまいき" },
 } as const;
 
-function getNatureDir(nature: Nature | undefined, stat: keyof typeof NATURE_REP_FORM): "plus" | "neutral" | "minus" {
-  if (nature?.plus === stat) return "plus";
-  if (nature?.minus === stat) return "minus";
-  return "neutral";
+type NatureStatKey = keyof typeof NATURE_REP_FORM;
+
+function deriveNatureId(plus: NatureStatKey | null, minus: NatureStatKey | null): string {
+  if (!plus && !minus) return "がんばりや";
+  if (plus && minus) {
+    return NATURES.find((n) => n.plus === plus && n.minus === minus)?.id ?? "がんばりや";
+  }
+  if (plus) return NATURE_REP_FORM[plus].plus;
+  return NATURE_REP_FORM[minus!].minus;
 }
 
 const STAT_LABEL: Record<keyof Stats, string> = {
@@ -66,6 +71,25 @@ export function PokemonForm({ title, value, onChange, side, inputIdSuffix, onSel
         ]
       : []);
   const nature = NATURE_BY_ID[value.natureId] ?? NATURE_BY_ID["がんばりや"];
+
+  const initNature = NATURE_BY_ID[value.natureId];
+  const [plusStat, setPlusStat] = useState<NatureStatKey | null>(
+    (initNature?.plus as NatureStatKey) ?? null,
+  );
+  const [minusStat, setMinusStat] = useState<NatureStatKey | null>(
+    (initNature?.minus as NatureStatKey) ?? null,
+  );
+  const ourNatureIdRef = useRef<string>(value.natureId);
+
+  useEffect(() => {
+    if (value.natureId !== ourNatureIdRef.current) {
+      const n = NATURE_BY_ID[value.natureId];
+      setPlusStat((n?.plus as NatureStatKey) ?? null);
+      setMinusStat((n?.minus as NatureStatKey) ?? null);
+      ourNatureIdRef.current = value.natureId;
+    }
+  }, [value.natureId]);
+
   const selectablePokemon = useMemo(
     () => POKEMON.filter((p) => !p.id.includes("-mega")),
     [],
@@ -165,7 +189,8 @@ export function PokemonForm({ title, value, onChange, side, inputIdSuffix, onSel
           <div className="label">性格補正</div>
           <div className="flex gap-3 flex-wrap">
             {(["atk", "def", "spa", "spd", "spe"] as const).map((k) => {
-              const dir = getNatureDir(nature, k);
+              const dir: "plus" | "neutral" | "minus" =
+                k === plusStat ? "plus" : k === minusStat ? "minus" : "neutral";
               return (
                 <div key={k} className="flex flex-col items-center gap-0.5">
                   <span className="text-xs text-gray-400">{STAT_LABEL[k]}</span>
@@ -177,7 +202,25 @@ export function PokemonForm({ title, value, onChange, side, inputIdSuffix, onSel
                         className={`input px-1.5 py-0.5 text-xs first:rounded-r-none last:rounded-l-none [&:not(:first-child):not(:last-child)]:rounded-none ${
                           dir === d ? "bg-blue-500 text-white border-blue-500" : ""
                         }`}
-                        onClick={() => update({ natureId: NATURE_REP_FORM[k][d] })}
+                        onClick={() => {
+                          let newPlus = plusStat;
+                          let newMinus = minusStat;
+                          if (d === "plus") {
+                            newPlus = k;
+                            if (newMinus === k) newMinus = null;
+                          } else if (d === "minus") {
+                            newMinus = k;
+                            if (newPlus === k) newPlus = null;
+                          } else {
+                            if (plusStat === k) newPlus = null;
+                            if (minusStat === k) newMinus = null;
+                          }
+                          setPlusStat(newPlus);
+                          setMinusStat(newMinus);
+                          const natureId = deriveNatureId(newPlus, newMinus);
+                          ourNatureIdRef.current = natureId;
+                          update({ natureId });
+                        }}
                       >
                         {d === "plus" ? "+" : d === "neutral" ? "0" : "−"}
                       </button>
