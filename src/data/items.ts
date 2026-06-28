@@ -47,6 +47,25 @@ export const ITEMS: ItemData[] = [
   { id: "くろメガネ", name: "くろメガネ", typeBoostType: "あく" },
   { id: "メタルコート", name: "メタルコート", typeBoostType: "はがね" },
   { id: "ようせいのハネ", name: "ようせいのハネ", typeBoostType: "フェアリー" },
+  // ダメージ補正アイテム
+  { id: "こだわりハチマキ", name: "こだわりハチマキ", choiceBand: true },
+  { id: "こだわりメガネ", name: "こだわりメガネ", choiceSpecs: true },
+  { id: "いのちのたま", name: "いのちのたま", lifeOrb: true },
+  { id: "たつじんのおび", name: "たつじんのおび", expertBelt: true },
+  { id: "ちからのハチマキ", name: "ちからのハチマキ", muscleBand: true },
+  { id: "ものしりメガネ", name: "ものしりメガネ", wiseGlasses: true },
+  // ユーティリティアイテム
+  { id: "メトロノーム", name: "メトロノーム" },
+  { id: "おおきなねっこ", name: "おおきなねっこ" },
+  { id: "ひかりのねんど", name: "ひかりのねんど" },
+  { id: "あついいわ", name: "あついいわ" },
+  { id: "つめたいいわ", name: "つめたいいわ" },
+  { id: "さらさらいわ", name: "さらさらいわ" },
+  { id: "しめったいわ", name: "しめったいわ" },
+  { id: "こうかくレンズ", name: "こうかくレンズ" },
+  { id: "フォーカスレンズ", name: "フォーカスレンズ" },
+  { id: "くろいてっきゅう", name: "くろいてっきゅう" },
+  { id: "きれいなぬけがら", name: "きれいなぬけがら" },
 ];
 
 export const ITEM_BY_ID: Record<string, ItemData> = Object.fromEntries(
