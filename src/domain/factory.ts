@@ -19,7 +19,7 @@ export function makePokemon(
 ): PokemonInstance {
   return {
     speciesId,
-    natureId: opts.natureId ?? "まじめ",
+    natureId: opts.natureId ?? "がんばりや",
     ability: opts.ability ?? "",
     item: opts.item,
     aps: opts.aps ?? ZERO_APS,
