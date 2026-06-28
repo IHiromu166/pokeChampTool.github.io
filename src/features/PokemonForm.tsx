@@ -65,7 +65,7 @@ export function PokemonForm({ title, value, onChange, side, inputIdSuffix, onSel
           },
         ]
       : []);
-  const nature = NATURE_BY_ID[value.natureId] ?? NATURE_BY_ID["まじめ"];
+  const nature = NATURE_BY_ID[value.natureId] ?? NATURE_BY_ID["がんばりや"];
   const selectablePokemon = useMemo(
     () => POKEMON.filter((p) => !p.id.includes("-mega")),
     [],
